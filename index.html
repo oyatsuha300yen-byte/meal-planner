@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#10b981">
+<title>家族の献立プランナー</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="献立">
+<style>
+:root{
+  --g:#10b981; --g2:#059669; --g-light:#d1fae5; --g-bg:#ecfdf5;
+  --o:#f59e0b; --o-light:#fef3c7;
+  --r:#ef4444; --r-light:#fee2e2;
+  --b:#3b82f6; --b-light:#dbeafe;
+  --gray:#6b7280; --gray-light:#f3f4f6; --gray-border:#e5e7eb;
+  --text:#111827; --text-sub:#4b5563;
+  --bg:#f9fafb; --card:#fff;
+  --radius:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5}
+body{padding-bottom:80px}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit;padding:0}
+input,select,textarea{font-family:inherit;font-size:16px}
+
+/* Header */
+header{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,var(--g) 0%,var(--g2) 100%);color:#fff;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+header h1{margin:0;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+header .sub{font-size:11px;opacity:.9;margin-top:2px}
+
+/* Main */
+main{padding:12px}
+.view{display:none}
+.view.active{display:block}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card h2{margin:0 0 10px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
+
+/* Week tabs */
+.week-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+.week-tabs::-webkit-scrollbar{display:none}
+.week-tab{flex-shrink:0;min-width:64px;padding:10px 8px;border-radius:10px;background:var(--gray-light);text-align:center;border:2px solid transparent}
+.week-tab.active{background:var(--g);color:#fff;border-color:var(--g)}
+.week-tab.weekend{background:var(--o-light);color:var(--o)}
+.week-tab.weekend.active{background:var(--o);color:#fff;border-color:var(--o)}
+.week-tab .day{font-size:14px;font-weight:700}
+.week-tab .kcal{font-size:10px;opacity:.85;margin-top:2px}
+
+/* Month tabs */
+.month-tabs{display:flex;gap:6px;margin-bottom:12px}
+.month-tab{flex:1;padding:10px;border-radius:10px;background:var(--gray-light);text-align:center;font-size:12px;font-weight:600}
+.month-tab.active{background:var(--g);color:#fff}
+
+/* Meal */
+.meal-card{border:2px solid var(--g);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;background:#fff}
+.meal-card.weekend{border-color:var(--o)}
+.meal-head{background:var(--g);color:#fff;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px}
+.meal-card.weekend .meal-head{background:var(--o)}
+.meal-body{padding:12px}
+.meal-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--gray-border)}
+.meal-row:last-child{border-bottom:none}
+.meal-row .left{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.tag{display:inline-block;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:600;flex-shrink:0}
+.tag-main{background:var(--r-light);color:var(--r)}
+.tag-sub{background:var(--g-light);color:var(--g2)}
+.tag-soup{background:var(--b-light);color:var(--b)}
+.tag-hc-l{background:#fed7aa;color:#c2410c;font-size:10px}
+.tag-hc-s{background:#fde68a;color:#a16207;font-size:10px}
+.meal-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meal-actions{display:flex;gap:4px}
+.icon-btn{width:30px;height:30px;border-radius:8px;background:var(--gray-light);display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+.pfc{display:flex;gap:10px;font-size:11px;color:var(--text-sub);padding:8px 0 0;flex-wrap:wrap}
+.pfc span::before{content:"●";margin-right:3px}
+.pfc .p::before{color:var(--b)}
+.pfc .f::before{color:var(--o)}
+.pfc .c::before{color:var(--g)}
+
+/* Inventory */
+.input-row{display:flex;gap:8px;margin-bottom:10px}
+.input-row input{flex:1;padding:10px 12px;border:2px solid var(--gray-border);border-radius:10px;outline:none}
+.input-row input:focus{border-color:var(--g)}
+.input-row button{padding:10px 18px;background:var(--g);color:#fff;border-radius:10px;font-weight:700}
+
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:20px;background:var(--gray-light);font-size:13px;border:1px solid var(--gray-border)}
+.chip.expire-soon{background:var(--r-light);border-color:var(--r);color:var(--r)}
+.chip.expire-warn{background:var(--o-light);border-color:var(--o);color:var(--o)}
+.chip .x{margin-left:4px;opacity:.6;cursor:pointer}
+.chip .expire-label{font-size:10px;background:#fff;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:600}
+
+.quick-input{background:var(--g-bg);border-radius:10px;padding:10px;margin-bottom:10px}
+.quick-head{font-size:13px;font-weight:600;color:var(--g2);margin-bottom:6px}
+.quick-cats{display:flex;gap:4px;margin-bottom:8px;overflow-x:auto;padding-bottom:2px}
+.quick-cat{flex-shrink:0;padding:5px 10px;border-radius:20px;background:#fff;font-size:12px;border:1px solid var(--gray-border)}
+.quick-cat.active{background:var(--g);color:#fff;border-color:var(--g)}
+.quick-items{display:flex;flex-wrap:wrap;gap:4px}
+.quick-item{padding:5px 10px;border-radius:20px;background:#fff;font-size:12px;border:1px solid var(--r-light);color:var(--r)}
+.quick-item.in-stock{background:var(--g-light);color:var(--g2);border-color:var(--g)}
+
+/* Bottom nav */
+nav.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--gray-border);display:flex;padding:6px 4px 10px;z-index:20}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;color:var(--gray);font-size:10px;font-weight:600}
+.nav-btn.active{color:var(--g)}
+.nav-btn .ic{font-size:22px;line-height:1}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:none;align-items:flex-end}
+.modal-bg.show{display:flex}
+.modal{background:#fff;width:100%;max-height:90vh;border-radius:20px 20px 0 0;overflow-y:auto;padding:20px;animation:slideUp .2s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.modal-head h3{margin:0;font-size:18px}
+.modal-close{width:34px;height:34px;border-radius:50%;background:var(--gray-light);display:flex;align-items:center;justify-content:center;font-size:18px}
+
+.recipe-hero{background:linear-gradient(135deg,var(--g) 0%,var(--g2) 100%);color:#fff;margin:-20px -20px 16px;padding:24px 20px;text-align:center;border-radius:20px 20px 0 0}
+.recipe-hero .emoji{font-size:48px;display:block;margin-bottom:6px}
+.recipe-hero h3{margin:0;font-size:20px}
+.recipe-meta{display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+.recipe-meta .mtag{background:rgba(255,255,255,.25);padding:4px 10px;border-radius:12px;font-size:11px}
+
+.section{margin-bottom:16px}
+.section h4{margin:0 0 8px;font-size:14px;font-weight:700;color:var(--g2);display:flex;align-items:center;gap:6px}
+.callout{border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.callout-kid{background:var(--o-light);border-left:4px solid var(--o)}
+.callout-veg{background:var(--g-bg);border-left:4px solid var(--g)}
+.callout-hc{background:#fef3c7;border-left:4px solid #f59e0b}
+.callout-title{font-size:13px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.callout-body{font-size:13px;color:var(--text-sub)}
+
+.ing-list{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ing-item{background:var(--gray-light);border-radius:8px;padding:8px 10px;font-size:12px;display:flex;justify-content:space-between;gap:6px}
+.ing-item .n{font-weight:600}
+.ing-item .a{color:var(--gray)}
+
+.step{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--gray-border)}
+.step:last-child{border-bottom:none}
+.step-num{width:26px;height:26px;background:var(--g-light);color:var(--g2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;font-size:13px}
+.step-body{font-size:13px;padding-top:2px}
+
+/* Shopping list */
+.shop-cat{margin-bottom:14px}
+.shop-cat h3{margin:0 0 6px;font-size:14px;border-bottom:2px solid var(--g);padding-bottom:4px;display:flex;align-items:center;gap:6px}
+.shop-item{display:flex;justify-content:space-between;padding:8px 4px;border-bottom:1px dashed var(--gray-border);font-size:13px}
+.shop-item.have{color:var(--gray);text-decoration:line-through}
+.shop-item .amt{color:var(--gray)}
+.shop-item.have .amt{color:var(--gray)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px}
+.btn-pri{background:var(--g);color:#fff}
+.btn-sec{background:var(--gray-light);color:var(--text)}
+.btn-warn{background:var(--o-light);color:var(--o)}
+.btn-full{width:100%;padding:12px}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+
+/* Recipe list */
+.recipe-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.recipe-tile{background:#fff;border:1px solid var(--gray-border);border-radius:12px;padding:12px 10px;text-align:center;cursor:pointer}
+.recipe-tile .rt-emoji{font-size:32px;display:block;margin-bottom:4px}
+.recipe-tile .rt-name{font-size:12px;font-weight:600;margin-bottom:4px}
+.recipe-tile .rt-tags{font-size:10px;color:var(--gray)}
+.filter-row{display:flex;gap:4px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px}
+.filter-row::-webkit-scrollbar{display:none}
+.fchip{flex-shrink:0;padding:6px 12px;border-radius:20px;background:var(--gray-light);font-size:12px;border:1px solid transparent}
+.fchip.active{background:var(--g);color:#fff;border-color:var(--g)}
+
+/* Feedback */
+.fb-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px dashed var(--gray-border)}
+.fb-row:last-child{border-bottom:none}
+.fb-btns{display:flex;gap:6px}
+.fb-btn{padding:4px 10px;border-radius:8px;font-size:11px;background:var(--gray-light);border:1px solid var(--gray-border)}
+.fb-btn.sel-good{background:var(--g-light);border-color:var(--g);color:var(--g2)}
+.fb-btn.sel-bad{background:var(--r-light);border-color:var(--r);color:var(--r)}
+
+.bar{height:6px;background:var(--gray-light);border-radius:3px;overflow:hidden;display:flex;margin:6px 0 0}
+.bar .seg{height:100%}
+.bar .bp{background:var(--b)}
+.bar .bf{background:var(--o)}
+.bar .bc{background:var(--g)}
+
+.empty{text-align:center;color:var(--gray);padding:30px 10px;font-size:13px}
+.header-btn{background:rgba(255,255,255,.2);padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#fff}
+.header-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+details.sim{background:var(--gray-light);border-radius:10px;padding:10px;margin-top:8px}
+details.sim summary{font-size:13px;font-weight:600;cursor:pointer}
+details.sim[open] summary{margin-bottom:8px}
+.note{font-size:11px;color:var(--gray);margin-top:4px}
+
+/* Gantt */
+.gantt{margin-top:8px;background:#fff;border-radius:8px;padding:10px}
+.gantt-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.gantt-label{width:58px;font-size:10px;font-weight:700;color:var(--text-sub);flex-shrink:0;text-align:right}
+.gantt-track{flex:1;position:relative;height:26px;background:#f3f4f6;border-radius:5px;overflow:hidden}
+.gantt-bar{position:absolute;height:100%;display:flex;align-items:center;padding:0 4px;font-size:10px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;border-radius:5px}
+.gantt-prep{background:repeating-linear-gradient(45deg,#fbbf24,#fbbf24 4px,#f59e0b 4px,#f59e0b 8px);color:#78350f}
+.gantt-cook-l{background:linear-gradient(90deg,#f97316,#ea580c)}
+.gantt-cook-s{background:linear-gradient(90deg,#eab308,#ca8a04)}
+.gantt-cook-g{background:linear-gradient(90deg,#64748b,#475569)}
+.gantt-timeline{display:flex;justify-content:space-between;font-size:9px;color:var(--gray);margin-top:6px;padding-left:64px;padding-right:4px}
+.gantt-total{font-weight:700;color:var(--g2);font-size:13px;margin-top:4px;text-align:right}
+
+.sched-legend{display:flex;gap:8px;font-size:10px;color:var(--text-sub);margin-top:8px;flex-wrap:wrap}
+.sched-legend .lg{display:inline-flex;align-items:center;gap:3px}
+.sched-legend .sw{width:12px;height:12px;border-radius:3px}
+
+.seq{margin-top:10px;border-left:2px solid var(--g-light);padding-left:0;margin-left:4px}
+.seq-row{display:flex;gap:8px;align-items:center;padding:6px 0 6px 10px;position:relative;font-size:12px}
+.seq-row::before{content:"";position:absolute;left:-5px;top:50%;width:8px;height:8px;border-radius:50%;background:var(--g);transform:translateY(-50%)}
+.seq-row.done::before{background:var(--g2)}
+.seq-row.start::before{background:#f97316}
+.seq-time{font-weight:700;color:var(--g2);min-width:40px;font-variant-numeric:tabular-nums}
+.seq-icon{font-size:14px}
+.seq-text{flex:1}
+.seq-text b{font-weight:700}
+.seq-note{font-size:10px;color:var(--gray);margin-top:2px}
+
+.opt-tip{background:var(--o-light);border-left:3px solid var(--o);padding:8px 10px;border-radius:6px;font-size:11px;color:#78350f;margin-top:8px;line-height:1.4}
+.opt-tip strong{display:block;margin-bottom:2px}
+
+/* Day memo / extras */
+.day-memo{margin-top:14px;background:var(--g-bg);border-radius:10px;padding:12px;border-left:3px solid var(--g)}
+.memo-head{font-size:13px;font-weight:700;color:var(--g2);margin-bottom:8px;display:flex;align-items:center;gap:4px;justify-content:space-between}
+.memo-head .cnt{font-size:10px;background:var(--g);color:#fff;padding:2px 6px;border-radius:10px;font-weight:700}
+.memo-input{width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--gray-border);border-radius:8px;background:#fff;font-size:12px;outline:none;resize:vertical;font-family:inherit;box-sizing:border-box}
+.memo-input:focus{border-color:var(--g)}
+.extras-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.extra-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;background:#fff;border-radius:14px;font-size:11px;border:1px solid var(--g);color:var(--g2)}
+.extra-chip .amt{color:var(--gray);font-weight:400}
+.extra-chip .cat-ic{font-size:11px}
+.extra-chip .x{margin-left:3px;cursor:pointer;opacity:.5;font-size:13px;line-height:1;font-weight:700}
+.extra-chip .x:hover{opacity:1}
+.extra-add{display:flex;gap:4px;margin-top:8px}
+.extra-add input{padding:7px 8px;border:1px solid var(--gray-border);border-radius:6px;font-size:13px;outline:none;background:#fff;min-width:0}
+.extra-add .n-inp{flex:2}
+.extra-add .a-inp{flex:1}
+.extra-add button{padding:7px 12px;background:var(--g);color:#fff;border-radius:6px;font-weight:700;font-size:12px;flex-shrink:0}
+.memo-tip{font-size:10px;color:var(--gray);margin-top:6px;line-height:1.4}
+
+.shop-item .day-badge{display:inline-block;font-size:9px;background:var(--o);color:#fff;padding:1px 5px;border-radius:8px;margin-right:4px;font-weight:700;vertical-align:middle}
+.shop-item.extra-item{background:#fffbeb;padding:8px 10px;border-radius:6px;margin:3px 0;border:1px dashed var(--o-light)}
+.shop-section-title{font-size:11px;color:var(--o);margin-top:10px;margin-bottom:4px;font-weight:700}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1>🍱 家族の献立プランナー</h1>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="header-btn" id="btn-3days" title="在庫にある食材優先で月〜水の3日分を作成">🎯 在庫で3日</button>
+      <button class="header-btn" id="btn-regen">🔄 再作成</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- 週の献立 -->
+  <section class="view active" id="view-plan">
+    <div class="card">
+      <div class="month-tabs" id="month-tabs"></div>
+      <div class="week-tabs" id="week-tabs"></div>
+      <div id="day-meals"></div>
+    </div>
+    <div class="note">📌 主菜はホットクック大🔥L、副菜/汁物はホットクック小🔥S、ガス調理は🍳で表示。同時並行で時短。</div>
+  </section>
+
+  <!-- 冷蔵庫 -->
+  <section class="view" id="view-fridge">
+    <div class="card">
+      <h2>🛒 冷蔵庫の食材</h2>
+      <div class="input-row">
+        <input id="inv-input" placeholder="例: 鶏もも肉、卵、キャベツ">
+        <button id="inv-add">追加</button>
+      </div>
+      <div class="quick-input">
+        <div class="quick-head">⚡ よく使う食材からクイック入力</div>
+        <div class="quick-cats" id="quick-cats"></div>
+        <div class="quick-items" id="quick-items"></div>
+      </div>
+      <div id="inv-list" class="chip-group"></div>
+      <div class="note" style="margin-top:8px">💡 タップで賞味期限を編集／×で削除</div>
+    </div>
+  </section>
+
+  <!-- 買い物リスト -->
+  <section class="view" id="view-shop">
+    <div class="card">
+      <h2>🛒 買い物リスト</h2>
+      <div class="note">📌 今週の献立に必要な食材（冷蔵庫にあるものは取り消し線）</div>
+      <div class="btn-row">
+        <button class="btn btn-pri" id="btn-copy-shop">📋 コピー</button>
+        <button class="btn btn-warn" id="btn-share-shop">📤 LINE等で送る</button>
+      </div>
+      <div id="shop-list" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- レシピ一覧 -->
+  <section class="view" id="view-recipes">
+    <div class="card">
+      <h2>📖 レシピ一覧</h2>
+      <div class="filter-row" id="filter-row"></div>
+      <div class="recipe-grid" id="recipe-grid"></div>
+    </div>
+  </section>
+</main>
+
+<nav class="bottom">
+  <button class="nav-btn active" data-view="plan"><span class="ic">📅</span><span>献立</span></button>
+  <button class="nav-btn" data-view="fridge"><span class="ic">🧊</span><span>冷蔵庫</span></button>
+  <button class="nav-btn" data-view="shop"><span class="ic">🛒</span><span>買い物</span></button>
+  <button class="nav-btn" data-view="recipes"><span class="ic">📖</span><span>レシピ</span></button>
+</nav>
+
+<div class="modal-bg" id="modal-bg"><div class="modal" id="modal"></div></div>
+
+<script>
+/* ==============================
+   レシピデータ
+   tool: 'hc-l'(ホットクック大=主菜) | 'hc-s'(ホットクック小=副菜/汁物) | 'stove'(山本ゆり風)
+   category: 'main'|'sub'|'soup'
+   ============================== */
+const RECIPES = [
+// ====== ホットクック主菜(大) ======
+{id:'nikujaga',name:'肉じゃが',emoji:'🥘',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:35,servings:4,kcal:420,p:22,f:12,c:55,
+ ingredients:[{n:'牛こま切れ肉',a:'300g',c:'肉類'},{n:'じゃがいも',a:'4個',c:'野菜'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'にんじん',a:'1本',c:'野菜'},{n:'しらたき',a:'1袋',c:'その他'},{n:'醤油',a:'大3',c:'調味料'},{n:'砂糖',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'}],
+ steps:['じゃがいも・にんじん・玉ねぎを一口大に切る','しらたきは食べやすい長さに切る','内鍋に全材料と調味料を入れる','ホットクック「肉じゃが」自動メニューで調理'],
+ hcMode:'自動「肉じゃが」約35分',
+ kidTip:'じゃがいもは大きめに、お肉は柔らかくなるのでそのままでOK。辛味なしで食べやすい。',
+ hide:'にんじんを薄切りにすると存在感が減る',tags:['和食','定番']},
+
+{id:'butakaku',name:'豚の角煮',emoji:'🍖',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:60,servings:4,kcal:520,p:28,f:30,c:25,
+ ingredients:[{n:'豚バラブロック',a:'500g',c:'肉類'},{n:'長ねぎ(青)',a:'1本',c:'野菜'},{n:'しょうが',a:'1片',c:'野菜'},{n:'醤油',a:'大4',c:'調味料'},{n:'砂糖',a:'大3',c:'調味料'},{n:'酒',a:'大3',c:'調味料'},{n:'水',a:'200ml',c:'調味料'}],
+ steps:['豚バラを4cm角に切る','内鍋に全材料を入れる','ホットクック「豚の角煮」自動メニューで調理','ゆで卵を加えても美味しい'],
+ hcMode:'自動「豚の角煮」約60分',
+ kidTip:'脂身が苦手な子には赤身部分を選んで取り分け。甘めの味付けで食べやすい。',
+ hide:'長ねぎは最後に外す',tags:['和食','作り置き']},
+
+{id:'chickentomato',name:'鶏肉のトマト煮',emoji:'🍅',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:30,servings:4,kcal:380,p:30,f:15,c:20,
+ ingredients:[{n:'鶏もも肉',a:'2枚(500g)',c:'肉類'},{n:'トマト缶',a:'1缶',c:'調味料'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'にんじん',a:'1本',c:'野菜'},{n:'にんにく',a:'1片',c:'野菜'},{n:'コンソメ',a:'1個',c:'調味料'},{n:'塩こしょう',a:'少々',c:'調味料'},{n:'ケチャップ',a:'大1',c:'調味料'}],
+ steps:['鶏肉を一口大に切り塩こしょう','玉ねぎ・にんじんを角切り、にんにくみじん切り','内鍋に全材料を入れる','ホットクック「チキンのトマト煮」自動で調理'],
+ hcMode:'自動「チキンのトマト煮」約30分',
+ kidTip:'ケチャップを少し加えると酸味が和らぎ子ども好みに。パスタにかけてもOK。',
+ hide:'にんじん・玉ねぎはすりおろしても◎',tags:['洋食','子ども好き']},
+
+{id:'curry',name:'カレーライス',emoji:'🍛',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:45,servings:4,kcal:680,p:25,f:22,c:95,
+ ingredients:[{n:'豚こま切れ肉',a:'300g',c:'肉類'},{n:'玉ねぎ',a:'2個',c:'野菜'},{n:'じゃがいも',a:'3個',c:'野菜'},{n:'にんじん',a:'1本',c:'野菜'},{n:'カレールー',a:'1/2箱',c:'調味料'},{n:'水',a:'700ml',c:'調味料'}],
+ steps:['野菜・肉を一口大に切る','内鍋に水以外の材料とルーを入れる','水を加えてホットクック「カレー」自動調理','ご飯にかける'],
+ hcMode:'自動「カレー」約45分',
+ kidTip:'甘口ルーを使用。野菜はすりおろしてもOK。',
+ hide:'玉ねぎ・にんじんをすりおろすと甘みアップ',tags:['洋食','定番']},
+
+{id:'keema',name:'キーマカレー',emoji:'🍛',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:20,servings:4,kcal:580,p:26,f:25,c:65,
+ ingredients:[{n:'合いびき肉',a:'300g',c:'肉類'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'にんじん',a:'1本',c:'野菜'},{n:'トマト缶',a:'1缶',c:'調味料'},{n:'甘口カレールー',a:'3〜4片',c:'調味料'},{n:'水',a:'100ml',c:'調味料'},{n:'サラダ油',a:'小1',c:'調味料'}],
+ steps:['玉ねぎ・にんじんをみじん切り','内鍋にサラダ油・ひき肉・野菜・トマト缶・水を入れる','ホットクック手動「煮る」15分','ルーを加えて混ぜ、さらに5分'],
+ hcMode:'手動:煮る15分+5分',
+ kidTip:'甘口ルー使用。ご飯に混ぜてカレーライスにするとさらに食べやすい。',
+ hide:'にんじん・玉ねぎをみじん切りにして肉に混ぜ込む',tags:['洋食','子ども好き']},
+
+{id:'hayashi',name:'ハヤシライス',emoji:'🍛',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:30,servings:4,kcal:620,p:22,f:20,c:80,
+ ingredients:[{n:'牛こま切れ肉',a:'300g',c:'肉類'},{n:'玉ねぎ',a:'2個',c:'野菜'},{n:'マッシュルーム',a:'1パック',c:'野菜'},{n:'ハヤシルー',a:'1/2箱',c:'調味料'},{n:'水',a:'500ml',c:'調味料'}],
+ steps:['玉ねぎを薄切り、マッシュルームを薄切り','内鍋にすべて入れる','ホットクック「ハヤシライス」自動調理'],
+ hcMode:'自動「ハヤシ」約30分',
+ kidTip:'マイルドな味で子どもにも人気。',
+ hide:'玉ねぎの甘みで優しい味',tags:['洋食']},
+
+{id:'teriyaki',name:'鶏の照り焼き',emoji:'🍗',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:25,servings:4,kcal:440,p:32,f:20,c:18,
+ ingredients:[{n:'鶏もも肉',a:'2枚(500g)',c:'肉類'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'}],
+ steps:['鶏肉を一口大に切る','内鍋に鶏肉と調味料を入れる','ホットクック手動「煮る」15分','軽く煮詰めて完成'],
+ hcMode:'手動:煮る15分',
+ kidTip:'甘辛い味付けでご飯が進む。お弁当にも◎',
+ hide:'',tags:['和食','お弁当']},
+
+{id:'chickennanban',name:'チキン南蛮',emoji:'🍗',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:30,servings:4,kcal:580,p:30,f:28,c:42,
+ ingredients:[{n:'鶏もも肉',a:'2枚',c:'肉類'},{n:'卵',a:'1個',c:'卵・豆腐'},{n:'小麦粉',a:'大3',c:'調味料'},{n:'砂糖',a:'大2',c:'調味料'},{n:'酢',a:'大3',c:'調味料'},{n:'醤油',a:'大2',c:'調味料'},{n:'マヨネーズ',a:'大3',c:'調味料'},{n:'ゆで卵',a:'1個',c:'卵・豆腐'}],
+ steps:['鶏肉を一口大に切り小麦粉→溶き卵','ホットクック「鶏の唐揚げ風」またはフライパンで焼く','甘酢を煮詰める','タルタル(マヨ+ゆで卵)をかける'],
+ hcMode:'手動:蒸し焼き10分',
+ kidTip:'酢は少なめで調整。タルタルは子どもの大好物。',
+ hide:'',tags:['洋食','ご馳走']},
+
+{id:'sabamiso',name:'さばの味噌煮',emoji:'🐟',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:25,servings:4,kcal:380,p:26,f:20,c:15,
+ ingredients:[{n:'さば',a:'4切れ',c:'魚介'},{n:'しょうが',a:'1片',c:'野菜'},{n:'味噌',a:'大3',c:'調味料'},{n:'砂糖',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'水',a:'100ml',c:'調味料'}],
+ steps:['さばに熱湯をかけて臭み抜き','しょうがを薄切り','内鍋に全材料を入れる','ホットクック「さばの味噌煮」自動調理'],
+ hcMode:'自動「さばの味噌煮」約25分',
+ kidTip:'骨に注意して取り分け。甘めの味噌で食べやすい。',
+ hide:'',tags:['和食','魚']},
+
+{id:'friedrice',name:'チャーハン',emoji:'🍚',category:'main',tool:'hc-l',cuisine:'中華',source:'ホットクック',time:20,servings:4,kcal:560,p:18,f:18,c:78,
+ ingredients:[{n:'ご飯',a:'3膳',c:'その他'},{n:'卵',a:'3個',c:'卵・豆腐'},{n:'ハム',a:'4枚',c:'肉類'},{n:'長ねぎ',a:'1/2本',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'鶏ガラスープ',a:'大1',c:'調味料'},{n:'醤油',a:'大1',c:'調味料'},{n:'ごま油',a:'大1',c:'調味料'}],
+ steps:['具材をみじん切り','卵を溶く','内鍋に全部入れる','ホットクック「チャーハン」自動調理'],
+ hcMode:'自動「チャーハン」約20分',
+ kidTip:'パラパラ仕上がりで子どもも食べやすい。',
+ hide:'にんじん・ねぎをみじん切りで混ぜ込み',tags:['中華','子ども好き']},
+
+{id:'mabodofu',name:'麻婆豆腐',emoji:'🍲',category:'main',tool:'hc-l',cuisine:'中華',source:'ホットクック',time:20,servings:4,kcal:380,p:22,f:22,c:20,
+ ingredients:[{n:'豚ひき肉',a:'250g',c:'肉類'},{n:'絹豆腐',a:'1丁',c:'卵・豆腐'},{n:'長ねぎ',a:'1/2本',c:'野菜'},{n:'麻婆豆腐の素(甘口)',a:'1袋',c:'調味料'}],
+ steps:['豆腐を角切り、ねぎをみじん切り','内鍋にひき肉・ねぎ・豆腐・素を入れる','ホットクック手動「煮る」10分'],
+ hcMode:'手動:煮る10分',
+ kidTip:'甘口の素を使用。辛いのが苦手な子に◎',
+ hide:'',tags:['中華']},
+
+{id:'chickenhambag',name:'煮込みハンバーグ',emoji:'🍔',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:40,servings:4,kcal:560,p:28,f:30,c:45,
+ ingredients:[{n:'合いびき肉',a:'400g',c:'肉類'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'卵',a:'1個',c:'卵・豆腐'},{n:'パン粉',a:'1/2カップ',c:'調味料'},{n:'牛乳',a:'大2',c:'乳製品'},{n:'トマト缶',a:'1缶',c:'調味料'},{n:'ケチャップ',a:'大3',c:'調味料'},{n:'ウスターソース',a:'大2',c:'調味料'},{n:'コンソメ',a:'1個',c:'調味料'}],
+ steps:['玉ねぎをみじん切り、ひき肉と卵・パン粉・牛乳で捏ねて成形','内鍋にハンバーグを並べる','トマト缶・調味料を加える','ホットクック「煮込みハンバーグ」自動調理'],
+ hcMode:'自動「煮込みハンバーグ」約40分',
+ kidTip:'子どもの定番。取り分けてパンにはさんでも◎',
+ hide:'玉ねぎ・にんじんを肉に混ぜ込み',tags:['洋食','子ども好き']},
+
+{id:'buta-shogayaki',name:'豚の生姜焼き',emoji:'🍖',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:15,servings:4,kcal:460,p:28,f:24,c:22,
+ ingredients:[{n:'豚ロース',a:'500g',c:'肉類'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'しょうが',a:'1片',c:'野菜'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'}],
+ steps:['玉ねぎを薄切り、しょうがすりおろし','内鍋に全材料を入れる','ホットクック手動「煮る」10分'],
+ hcMode:'手動:煮る10分',
+ kidTip:'しょうが控えめで。甘辛味でご飯が進む。',
+ hide:'',tags:['和食','定番']},
+
+{id:'buri-teriyaki',name:'ぶりの照り焼き',emoji:'🐟',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:20,servings:4,kcal:340,p:26,f:16,c:12,
+ ingredients:[{n:'ぶり',a:'4切れ',c:'魚介'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'}],
+ steps:['ぶりに熱湯で臭み抜き','内鍋にぶりと調味料','ホットクック手動「煮る」10分'],
+ hcMode:'手動:煮る10分',
+ kidTip:'甘辛い味で子どもも食べやすい。',
+ hide:'',tags:['和食','魚']},
+
+{id:'chicken-gomoku',name:'鶏と根菜の煮物',emoji:'🥘',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:35,servings:4,kcal:380,p:26,f:10,c:48,
+ ingredients:[{n:'鶏もも肉',a:'400g',c:'肉類'},{n:'れんこん',a:'200g',c:'野菜'},{n:'ごぼう',a:'1本',c:'野菜'},{n:'にんじん',a:'1本',c:'野菜'},{n:'こんにゃく',a:'1枚',c:'その他'},{n:'醤油',a:'大3',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大2',c:'調味料'}],
+ steps:['材料を一口大に切る','内鍋に全部入れる','ホットクック自動「筑前煮」'],
+ hcMode:'自動「筑前煮」約35分',
+ kidTip:'れんこんのシャキシャキが苦手なら小さく。',
+ hide:'',tags:['和食','根菜']},
+
+{id:'gyudon',name:'牛丼',emoji:'🍚',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:15,servings:4,kcal:580,p:22,f:18,c:82,
+ ingredients:[{n:'牛こま切れ肉',a:'300g',c:'肉類'},{n:'玉ねぎ',a:'2個',c:'野菜'},{n:'醤油',a:'大3',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'砂糖',a:'大2',c:'調味料'},{n:'水',a:'200ml',c:'調味料'}],
+ steps:['玉ねぎを薄切り','内鍋に全材料','ホットクック手動「煮る」10分','ご飯にかける'],
+ hcMode:'手動:煮る10分',
+ kidTip:'甘めの味付けで食べやすい。卵黄を乗せても◎',
+ hide:'',tags:['和食','どんぶり']},
+
+// ====== ホットクック副菜/汁物(小) ======
+{id:'tonjiru',name:'豚汁',emoji:'🍲',category:'soup',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:25,servings:4,kcal:180,p:10,f:8,c:15,
+ ingredients:[{n:'豚こま切れ肉',a:'150g',c:'肉類'},{n:'大根',a:'1/4本',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'ごぼう',a:'1/2本',c:'野菜'},{n:'こんにゃく',a:'1/2枚',c:'その他'},{n:'長ねぎ',a:'1/2本',c:'野菜'},{n:'味噌',a:'大3',c:'調味料'},{n:'だし',a:'800ml',c:'調味料'}],
+ steps:['野菜を一口大に切る','内鍋に味噌以外の材料を入れる','ホットクック「豚汁」自動調理','仕上げに味噌を溶く'],
+ hcMode:'自動「豚汁」約25分',
+ kidTip:'野菜が苦手な子にも。具だくさんで栄養満点。',
+ hide:'野菜を小さめに切ると食べやすい',tags:['和食','汁物']},
+
+{id:'kenchin',name:'けんちん汁',emoji:'🍲',category:'soup',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:25,servings:4,kcal:140,p:8,f:6,c:16,
+ ingredients:[{n:'豆腐',a:'1/2丁',c:'卵・豆腐'},{n:'大根',a:'1/6本',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'ごぼう',a:'1/3本',c:'野菜'},{n:'しいたけ',a:'2枚',c:'野菜'},{n:'醤油',a:'大2',c:'調味料'},{n:'だし',a:'800ml',c:'調味料'}],
+ steps:['野菜を切る','豆腐を崩す','内鍋に全材料','ホットクック手動「煮る」20分'],
+ hcMode:'手動:煮る20分',
+ kidTip:'優しい味でお腹に優しい。',
+ hide:'',tags:['和食','汁物']},
+
+{id:'misoshiru-spinach',name:'ほうれん草の味噌汁',emoji:'🥬',category:'soup',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:15,servings:4,kcal:60,p:4,f:2,c:6,
+ ingredients:[{n:'ほうれん草',a:'1/2束',c:'野菜'},{n:'豆腐',a:'1/4丁',c:'卵・豆腐'},{n:'味噌',a:'大2',c:'調味料'},{n:'だし',a:'800ml',c:'調味料'}],
+ steps:['ほうれん草を3cmに切る','豆腐を角切り','内鍋に材料','ホットクック手動「煮る」10分','味噌を溶く'],
+ hcMode:'手動:煮る10分',
+ kidTip:'豆腐を増やすとタンパク質アップ。',
+ hide:'',tags:['和食','汁物']},
+
+{id:'minestrone',name:'ミネストローネ',emoji:'🍅',category:'soup',tool:'hc-s',cuisine:'洋食',source:'ホットクック',time:25,servings:4,kcal:140,p:5,f:4,c:20,
+ ingredients:[{n:'トマト缶',a:'1/2缶',c:'調味料'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'じゃがいも',a:'1個',c:'野菜'},{n:'ベーコン',a:'2枚',c:'肉類'},{n:'コンソメ',a:'1個',c:'調味料'},{n:'水',a:'500ml',c:'調味料'}],
+ steps:['野菜を1cm角に切る','内鍋に全材料','ホットクック「ミネストローネ」自動調理'],
+ hcMode:'自動「ミネストローネ」約25分',
+ kidTip:'食べやすい大きさで。マカロニを加えても◎',
+ hide:'',tags:['洋食','汁物']},
+
+{id:'corn-soup',name:'コーンスープ',emoji:'🌽',category:'soup',tool:'hc-s',cuisine:'洋食',source:'ホットクック',time:20,servings:4,kcal:160,p:5,f:7,c:20,
+ ingredients:[{n:'コーン缶',a:'1缶',c:'その他'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'牛乳',a:'400ml',c:'乳製品'},{n:'コンソメ',a:'1個',c:'調味料'},{n:'バター',a:'10g',c:'調味料'}],
+ steps:['玉ねぎを薄切り','内鍋に全材料','ホットクック手動「スープ」15分','ブレンダーでなめらかに'],
+ hcMode:'手動:スープ15分',
+ kidTip:'子どもの定番。コーンの甘みで食べやすい。',
+ hide:'',tags:['洋食','汁物','子ども好き']},
+
+{id:'kinpira',name:'きんぴらごぼう',emoji:'🥕',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:15,servings:4,kcal:120,p:3,f:5,c:18,
+ ingredients:[{n:'ごぼう',a:'1本',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'ごま油',a:'大1',c:'調味料'},{n:'白ごま',a:'適量',c:'調味料'}],
+ steps:['ごぼう・にんじんを千切り','内鍋に全材料','ホットクック「きんぴら」自動調理'],
+ hcMode:'自動「きんぴら」約15分',
+ kidTip:'細めに切ると食べやすい。甘めに調整で◎',
+ hide:'細切りにして違和感なく',tags:['和食','常備菜']},
+
+{id:'hijiki',name:'ひじきの煮物',emoji:'🥗',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:20,servings:4,kcal:110,p:4,f:3,c:16,
+ ingredients:[{n:'乾燥ひじき',a:'20g',c:'その他'},{n:'にんじん',a:'1/3本',c:'野菜'},{n:'大豆水煮',a:'1袋',c:'その他'},{n:'油揚げ',a:'1枚',c:'卵・豆腐'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'}],
+ steps:['ひじきを水で戻す','にんじん千切り、油揚げ細切り','内鍋に全部','ホットクック手動「煮る」15分'],
+ hcMode:'手動:煮る15分',
+ kidTip:'甘めに調整。お弁当にも◎',
+ hide:'',tags:['和食','常備菜']},
+
+{id:'kabocha-nitsuke',name:'かぼちゃの煮物',emoji:'🎃',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:20,servings:4,kcal:160,p:3,f:1,c:30,
+ ingredients:[{n:'かぼちゃ',a:'1/4個',c:'野菜'},{n:'醤油',a:'大1',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'だし',a:'200ml',c:'調味料'}],
+ steps:['かぼちゃを一口大に切る','内鍋に全材料','ホットクック自動「かぼちゃの煮物」'],
+ hcMode:'自動「かぼちゃの煮物」約20分',
+ kidTip:'甘くてホクホク。子どもの大好物。',
+ hide:'',tags:['和食','常備菜']},
+
+{id:'potatosalad',name:'ポテトサラダ',emoji:'🥔',category:'sub',tool:'hc-s',cuisine:'洋食',source:'ホットクック',time:25,servings:4,kcal:220,p:4,f:12,c:25,
+ ingredients:[{n:'じゃがいも',a:'3個',c:'野菜'},{n:'きゅうり',a:'1本',c:'野菜'},{n:'ハム',a:'2枚',c:'肉類'},{n:'マヨネーズ',a:'大4',c:'調味料'},{n:'塩こしょう',a:'少々',c:'調味料'}],
+ steps:['じゃがいもをホットクックで蒸す(15分)','潰してきゅうり・ハム・マヨと和える'],
+ hcMode:'蒸し板で蒸す15分',
+ kidTip:'マイルドな味でサンドイッチにも◎',
+ hide:'',tags:['洋食','子ども好き']},
+
+// ====== ガス調理(山本ゆり風) ======
+{id:'omurice',name:'オムライス',emoji:'🍳',category:'main',tool:'stove',cuisine:'洋食',source:'山本ゆり',time:20,servings:4,kcal:620,p:25,f:25,c:75,
+ ingredients:[{n:'ご飯',a:'3膳',c:'その他'},{n:'鶏もも肉',a:'200g',c:'肉類'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'卵',a:'6個',c:'卵・豆腐'},{n:'ケチャップ',a:'大5',c:'調味料'},{n:'バター',a:'20g',c:'調味料'},{n:'塩こしょう',a:'少々',c:'調味料'}],
+ steps:['鶏肉・玉ねぎを粗みじん','フライパンで炒めてご飯と合わせケチャップ','ふわふわ卵を作ってかぶせる'],
+ hcMode:'',
+ kidTip:'子ども定番。ケチャップで顔を描くと喜ぶ。',
+ hide:'玉ねぎみじん切りで存在感ゼロ',tags:['洋食','子ども好き']},
+
+{id:'yakisoba',name:'焼きそば',emoji:'🍜',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',time:15,servings:4,kcal:540,p:18,f:18,c:72,
+ ingredients:[{n:'焼きそば麺',a:'4袋',c:'その他'},{n:'豚こま肉',a:'200g',c:'肉類'},{n:'キャベツ',a:'1/4個',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'もやし',a:'1袋',c:'野菜'},{n:'焼きそばソース',a:'4袋',c:'調味料'}],
+ steps:['豚肉・野菜を炒める','麺をほぐして加え水少々','ソースを絡める'],
+ hcMode:'',
+ kidTip:'定番の子ども好み。青のりは別添えで。',
+ hide:'にんじんを千切り',tags:['和食','麺']},
+
+{id:'hambag',name:'ハンバーグ',emoji:'🍔',category:'main',tool:'stove',cuisine:'洋食',source:'山本ゆり',time:25,servings:4,kcal:520,p:28,f:28,c:35,
+ ingredients:[{n:'合いびき肉',a:'400g',c:'肉類'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'パン粉',a:'1/2カップ',c:'調味料'},{n:'牛乳',a:'大2',c:'乳製品'},{n:'卵',a:'1個',c:'卵・豆腐'},{n:'ケチャップ',a:'大4',c:'調味料'},{n:'ウスターソース',a:'大2',c:'調味料'}],
+ steps:['玉ねぎみじん切り','すべて混ぜて成形','フライパンで焼く','ケチャップ+ソースでソース'],
+ hcMode:'',
+ kidTip:'子どもの大定番。小さめに成形で食べやすく。',
+ hide:'玉ねぎ多めで甘み',tags:['洋食','子ども好き']},
+
+{id:'karaage',name:'鶏の唐揚げ',emoji:'🍗',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',time:30,servings:4,kcal:580,p:32,f:28,c:28,
+ ingredients:[{n:'鶏もも肉',a:'600g',c:'肉類'},{n:'醤油',a:'大2',c:'調味料'},{n:'酒',a:'大1',c:'調味料'},{n:'にんにく',a:'1片',c:'野菜'},{n:'しょうが',a:'1片',c:'野菜'},{n:'片栗粉',a:'適量',c:'調味料'},{n:'揚げ油',a:'適量',c:'調味料'}],
+ steps:['鶏肉を一口大、調味料で20分漬ける','片栗粉をまぶす','170度でカラッと揚げる'],
+ hcMode:'',
+ kidTip:'外はカリッと中はジューシー。子どもの大好物。',
+ hide:'',tags:['和食','ご馳走','お弁当']},
+
+{id:'shake-mune',name:'鮭のムニエル',emoji:'🐟',category:'main',tool:'stove',cuisine:'洋食',source:'山本ゆり',time:15,servings:4,kcal:320,p:28,f:16,c:10,
+ ingredients:[{n:'生鮭',a:'4切れ',c:'魚介'},{n:'小麦粉',a:'大3',c:'調味料'},{n:'バター',a:'20g',c:'調味料'},{n:'レモン',a:'1/2個',c:'野菜'},{n:'塩こしょう',a:'少々',c:'調味料'}],
+ steps:['鮭に塩こしょう、小麦粉をまぶす','バターで両面焼き','レモンを絞る'],
+ hcMode:'',
+ kidTip:'バターの風味で魚が食べやすくなる。',
+ hide:'',tags:['洋食','魚']},
+
+{id:'pork-cabbage',name:'豚肉とキャベツ炒め',emoji:'🥬',category:'main',tool:'stove',cuisine:'中華',source:'山本ゆり',time:15,servings:4,kcal:380,p:22,f:20,c:22,
+ ingredients:[{n:'豚こま肉',a:'300g',c:'肉類'},{n:'キャベツ',a:'1/4個',c:'野菜'},{n:'にんにく',a:'1片',c:'野菜'},{n:'醤油',a:'大2',c:'調味料'},{n:'オイスターソース',a:'大1',c:'調味料'},{n:'みりん',a:'大1',c:'調味料'}],
+ steps:['豚肉を炒める','キャベツ加えてさらに炒める','調味料で味付け'],
+ hcMode:'',
+ kidTip:'キャベツの甘みが引き立つ。',
+ hide:'',tags:['中華','野菜たっぷり']},
+
+{id:'ebichili',name:'エビチリ',emoji:'🍤',category:'main',tool:'stove',cuisine:'中華',source:'山本ゆり',time:20,servings:4,kcal:340,p:22,f:12,c:32,
+ ingredients:[{n:'むきエビ',a:'300g',c:'魚介'},{n:'長ねぎ',a:'1/2本',c:'野菜'},{n:'ケチャップ',a:'大4',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'鶏ガラスープ',a:'100ml',c:'調味料'},{n:'片栗粉',a:'大1',c:'調味料'}],
+ steps:['エビに片栗粉をまぶす','ねぎと炒める','調味料を加えてとろみ'],
+ hcMode:'',
+ kidTip:'甘めで辛くない。子ども大好き。',
+ hide:'',tags:['中華','子ども好き']},
+
+{id:'gyoza',name:'餃子',emoji:'🥟',category:'main',tool:'stove',cuisine:'中華',source:'山本ゆり',time:30,servings:4,kcal:440,p:18,f:18,c:52,
+ ingredients:[{n:'豚ひき肉',a:'250g',c:'肉類'},{n:'キャベツ',a:'1/6個',c:'野菜'},{n:'ニラ',a:'1/2束',c:'野菜'},{n:'餃子の皮',a:'30枚',c:'その他'},{n:'にんにく',a:'1片',c:'野菜'},{n:'醤油',a:'大1',c:'調味料'},{n:'ごま油',a:'大1',c:'調味料'}],
+ steps:['野菜をみじん切り','ひき肉と混ぜて皮で包む','フライパンで焼いて水少々+蓋で蒸し焼き'],
+ hcMode:'',
+ kidTip:'小さめに包むと食べやすい。',
+ hide:'キャベツたっぷりで野菜補給',tags:['中華','子ども好き']},
+
+{id:'napolitan',name:'ナポリタン',emoji:'🍝',category:'main',tool:'stove',cuisine:'洋食',source:'山本ゆり',time:20,servings:4,kcal:560,p:18,f:18,c:82,
+ ingredients:[{n:'パスタ',a:'320g',c:'その他'},{n:'ウインナー',a:'6本',c:'肉類'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'ピーマン',a:'2個',c:'野菜'},{n:'ケチャップ',a:'大6',c:'調味料'},{n:'バター',a:'20g',c:'調味料'}],
+ steps:['パスタを茹でる','具材を炒める','パスタとケチャップで和える'],
+ hcMode:'',
+ kidTip:'ピーマンが苦手なら小さめに、またはなしで。',
+ hide:'ピーマン細切り',tags:['洋食','子ども好き','麺']},
+
+{id:'yakizakana',name:'鮭の塩焼き',emoji:'🐟',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',time:15,servings:4,kcal:260,p:26,f:12,c:5,
+ ingredients:[{n:'生鮭',a:'4切れ',c:'魚介'},{n:'塩',a:'少々',c:'調味料'}],
+ steps:['鮭に塩をふる','グリルで両面焼き'],
+ hcMode:'',
+ kidTip:'骨に注意して取り分け。',
+ hide:'',tags:['和食','魚','シンプル']},
+
+{id:'buta-kimchi',name:'豚キムチ',emoji:'🌶️',category:'main',tool:'stove',cuisine:'中華',source:'山本ゆり',time:15,servings:4,kcal:380,p:22,f:22,c:20,
+ ingredients:[{n:'豚こま肉',a:'300g',c:'肉類'},{n:'キムチ',a:'200g',c:'その他'},{n:'もやし',a:'1袋',c:'野菜'},{n:'ニラ',a:'1/2束',c:'野菜'},{n:'醤油',a:'大1',c:'調味料'},{n:'ごま油',a:'大1',c:'調味料'}],
+ steps:['豚肉を炒める','もやし・ニラ加える','キムチ・調味料で味付け'],
+ hcMode:'',
+ kidTip:'子ども用は豚もやし炒めで取り分けてからキムチ追加。',
+ hide:'',tags:['中華']},
+
+// 副菜(ガス)
+{id:'ohitashi',name:'ほうれん草のおひたし',emoji:'🥬',category:'sub',tool:'stove',cuisine:'和食',source:'山本ゆり',time:10,servings:4,kcal:40,p:3,f:1,c:5,
+ ingredients:[{n:'ほうれん草',a:'1束',c:'野菜'},{n:'醤油',a:'大1',c:'調味料'},{n:'だし',a:'大2',c:'調味料'},{n:'かつお節',a:'適量',c:'調味料'}],
+ steps:['ほうれん草を茹でて水気を絞る','3cmに切る','調味料で和える'],
+ hcMode:'',
+ kidTip:'甘めの味付けで食べやすく。',
+ hide:'',tags:['和食','副菜']},
+
+{id:'tamago-yaki',name:'卵焼き',emoji:'🍳',category:'sub',tool:'stove',cuisine:'和食',source:'山本ゆり',time:10,servings:4,kcal:140,p:8,f:10,c:4,
+ ingredients:[{n:'卵',a:'4個',c:'卵・豆腐'},{n:'砂糖',a:'大1',c:'調味料'},{n:'醤油',a:'小1',c:'調味料'},{n:'だし',a:'大2',c:'調味料'}],
+ steps:['卵を溶いて調味料と混ぜる','卵焼き器で巻きながら焼く'],
+ hcMode:'',
+ kidTip:'甘めの味で子ども定番。お弁当にも。',
+ hide:'',tags:['和食','お弁当']},
+
+{id:'pic-jaco',name:'ピーマンとじゃこ炒め',emoji:'🫑',category:'sub',tool:'stove',cuisine:'和食',source:'山本ゆり',time:10,servings:4,kcal:80,p:5,f:3,c:8,
+ ingredients:[{n:'ピーマン',a:'5個',c:'野菜'},{n:'じゃこ',a:'30g',c:'魚介'},{n:'醤油',a:'大1',c:'調味料'},{n:'みりん',a:'大1',c:'調味料'},{n:'ごま油',a:'小1',c:'調味料'}],
+ steps:['ピーマンを細切り','じゃこと炒める','調味料で味付け'],
+ hcMode:'',
+ kidTip:'細めに切って苦味を和らげる。',
+ hide:'細切り',tags:['和食','副菜']},
+
+{id:'daikon-ninjin',name:'大根とにんじんのサラダ',emoji:'🥕',category:'sub',tool:'stove',cuisine:'和食',source:'山本ゆり',time:10,servings:4,kcal:60,p:1,f:3,c:8,
+ ingredients:[{n:'大根',a:'1/6本',c:'野菜'},{n:'にんじん',a:'1/3本',c:'野菜'},{n:'塩',a:'少々',c:'調味料'},{n:'酢',a:'大1',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'ごま',a:'適量',c:'調味料'}],
+ steps:['大根・にんじん千切り、塩もみ','水気を絞って調味料で和える'],
+ hcMode:'',
+ kidTip:'酢は控えめで甘めに。',
+ hide:'',tags:['和食','副菜']},
+
+{id:'tofu-hiya',name:'冷奴',emoji:'🥢',category:'sub',tool:'stove',cuisine:'和食',source:'山本ゆり',time:5,servings:4,kcal:80,p:7,f:4,c:3,
+ ingredients:[{n:'絹豆腐',a:'1丁',c:'卵・豆腐'},{n:'長ねぎ',a:'少々',c:'野菜'},{n:'かつお節',a:'適量',c:'調味料'},{n:'醤油',a:'適量',c:'調味料'}],
+ steps:['豆腐を切って皿に盛る','薬味と醤油'],
+ hcMode:'',
+ kidTip:'そのままの豆腐が食べやすい子も。',
+ hide:'',tags:['和食','シンプル']},
+
+{id:'chickendangojiru',name:'鶏だんご汁',emoji:'🍲',category:'soup',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:25,servings:4,kcal:180,p:14,f:6,c:14,
+ ingredients:[{n:'鶏ひき肉',a:'200g',c:'肉類'},{n:'長ねぎ',a:'1/2本',c:'野菜'},{n:'しょうが',a:'1片',c:'野菜'},{n:'大根',a:'1/6本',c:'野菜'},{n:'にんじん',a:'1/3本',c:'野菜'},{n:'醤油',a:'大2',c:'調味料'},{n:'だし',a:'800ml',c:'調味料'}],
+ steps:['鶏ひき肉にねぎ・しょうがを混ぜて丸める','内鍋にだし・野菜・だんご','ホットクック手動「煮る」20分'],
+ hcMode:'手動:煮る20分',
+ kidTip:'だんごがフワフワで食べやすい。',
+ hide:'野菜を小さく切って',tags:['和食','汁物']},
+
+{id:'wakame-soup',name:'わかめスープ',emoji:'🍲',category:'soup',tool:'stove',cuisine:'中華',source:'山本ゆり',time:10,servings:4,kcal:40,p:3,f:1,c:4,
+ ingredients:[{n:'乾燥わかめ',a:'5g',c:'その他'},{n:'長ねぎ',a:'1/4本',c:'野菜'},{n:'鶏ガラスープ',a:'大1',c:'調味料'},{n:'ごま油',a:'小1',c:'調味料'},{n:'水',a:'800ml',c:'調味料'},{n:'白ごま',a:'適量',c:'調味料'}],
+ steps:['鍋に水・鶏ガラ','わかめ・ねぎを加える','ごま油とごま'],
+ hcMode:'',
+ kidTip:'あっさりで飲みやすい。',
+ hide:'',tags:['中華','汁物']},
+
+// ====== 追加: ホットクック主菜(大) ======
+{id:'rollcabbage',name:'ロールキャベツ',emoji:'🥬',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:45,servings:4,kcal:360,p:22,f:16,c:28,
+ ingredients:[{n:'キャベツ',a:'8枚',c:'野菜'},{n:'合いびき肉',a:'300g',c:'肉類'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'パン粉',a:'1/4カップ',c:'調味料'},{n:'卵',a:'1個',c:'卵・豆腐'},{n:'トマト缶',a:'1缶',c:'調味料'},{n:'コンソメ',a:'1個',c:'調味料'},{n:'水',a:'300ml',c:'調味料'}],
+ steps:['キャベツをさっと茹でる','ひき肉だねを作り包む','内鍋に並べてトマト缶・水・コンソメ','ホットクック自動「ロールキャベツ」'],
+ hcMode:'自動「ロールキャベツ」約45分',
+ kidTip:'キャベツの甘みが引き立ち子どもも食べやすい。',
+ hide:'野菜をひき肉に混ぜ込む',tags:['洋食','子ども好き']},
+
+{id:'beef-stew',name:'ビーフシチュー',emoji:'🍲',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:60,servings:4,kcal:640,p:30,f:30,c:55,
+ ingredients:[{n:'牛肉(シチュー用)',a:'500g',c:'肉類'},{n:'じゃがいも',a:'3個',c:'野菜'},{n:'にんじん',a:'1本',c:'野菜'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'マッシュルーム',a:'1パック',c:'野菜'},{n:'シチュールー',a:'1/2箱',c:'調味料'},{n:'水',a:'600ml',c:'調味料'}],
+ steps:['野菜・肉を一口大に切る','内鍋に全材料を入れる','ホットクック自動「ビーフシチュー」'],
+ hcMode:'自動「ビーフシチュー」約60分',
+ kidTip:'じっくり煮込んで柔らか。ごはんにもパンにも合う。',
+ hide:'',tags:['洋食','ご馳走']},
+
+{id:'buta-daikon',name:'豚バラ大根',emoji:'🥘',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:35,servings:4,kcal:420,p:20,f:22,c:30,
+ ingredients:[{n:'豚バラ肉',a:'300g',c:'肉類'},{n:'大根',a:'1/2本',c:'野菜'},{n:'しょうが',a:'1片',c:'野菜'},{n:'醤油',a:'大3',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'水',a:'200ml',c:'調味料'}],
+ steps:['大根を一口大に切る','豚バラも食べやすく','内鍋に全材料','ホットクック手動「煮る」30分'],
+ hcMode:'手動:煮る30分',
+ kidTip:'大根に味が染みて柔らか。',
+ hide:'',tags:['和食','定番']},
+
+{id:'buri-daikon',name:'ぶり大根',emoji:'🐟',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:35,servings:4,kcal:360,p:26,f:14,c:22,
+ ingredients:[{n:'ぶり',a:'4切れ',c:'魚介'},{n:'大根',a:'1/2本',c:'野菜'},{n:'しょうが',a:'1片',c:'野菜'},{n:'醤油',a:'大3',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'}],
+ steps:['大根を厚めの輪切り','ぶりに熱湯で臭み抜き','内鍋に全材料','ホットクック自動「ぶり大根」'],
+ hcMode:'自動「ぶり大根」約35分',
+ kidTip:'骨に注意。大根に味が染みて美味。',
+ hide:'',tags:['和食','魚']},
+
+{id:'tebamoto-amazu',name:'鶏手羽元の甘酢煮',emoji:'🍗',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:30,servings:4,kcal:380,p:26,f:18,c:24,
+ ingredients:[{n:'鶏手羽元',a:'10本',c:'肉類'},{n:'ゆで卵',a:'4個',c:'卵・豆腐'},{n:'醤油',a:'大3',c:'調味料'},{n:'酢',a:'大3',c:'調味料'},{n:'砂糖',a:'大3',c:'調味料'},{n:'酒',a:'大2',c:'調味料'}],
+ steps:['内鍋に手羽元・ゆで卵・調味料','ホットクック手動「煮る」25分'],
+ hcMode:'手動:煮る25分',
+ kidTip:'甘酢でさっぱり。手づかみで食べやすい。',
+ hide:'',tags:['和食','作り置き']},
+
+{id:'meatsauce',name:'ミートソース',emoji:'🍝',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:30,servings:4,kcal:620,p:26,f:22,c:80,
+ ingredients:[{n:'合いびき肉',a:'300g',c:'肉類'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'トマト缶',a:'1缶',c:'調味料'},{n:'ケチャップ',a:'大3',c:'調味料'},{n:'コンソメ',a:'1個',c:'調味料'},{n:'パスタ',a:'320g',c:'その他'}],
+ steps:['野菜をみじん切り','内鍋にパスタ以外全部','ホットクック自動「ミートソース」','別茹でパスタにかける'],
+ hcMode:'自動「ミートソース」約30分',
+ kidTip:'野菜たっぷりで子どもが気づかず野菜摂取。',
+ hide:'玉ねぎ・にんじんみじん切り',tags:['洋食','子ども好き','麺']},
+
+{id:'porc-pot',name:'ポトフ',emoji:'🍲',category:'main',tool:'hc-l',cuisine:'洋食',source:'ホットクック',time:40,servings:4,kcal:320,p:20,f:14,c:28,
+ ingredients:[{n:'ウインナー',a:'8本',c:'肉類'},{n:'キャベツ',a:'1/4個',c:'野菜'},{n:'にんじん',a:'1本',c:'野菜'},{n:'じゃがいも',a:'3個',c:'野菜'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'コンソメ',a:'2個',c:'調味料'},{n:'水',a:'800ml',c:'調味料'}],
+ steps:['野菜を大きめに切る','内鍋に全材料','ホットクック自動「ポトフ」'],
+ hcMode:'自動「ポトフ」約40分',
+ kidTip:'野菜の甘みたっぷり。子どもも食べやすい。',
+ hide:'',tags:['洋食','野菜たっぷり']},
+
+{id:'tandoori',name:'タンドリーチキン',emoji:'🍗',category:'main',tool:'hc-l',cuisine:'その他',source:'ホットクック',time:30,servings:4,kcal:420,p:32,f:20,c:15,
+ ingredients:[{n:'鶏もも肉',a:'500g',c:'肉類'},{n:'ヨーグルト',a:'100g',c:'乳製品'},{n:'カレー粉',a:'大2',c:'調味料'},{n:'ケチャップ',a:'大2',c:'調味料'},{n:'にんにく',a:'1片',c:'野菜'},{n:'塩',a:'小1',c:'調味料'}],
+ steps:['鶏肉を漬けダレに30分','内鍋に入れてホットクック手動「蒸し焼き」15分'],
+ hcMode:'手動:蒸し焼き15分',
+ kidTip:'カレー粉少なめにすれば子どもも好き。',
+ hide:'',tags:['その他','子ども好き']},
+
+{id:'mabo-nasu',name:'麻婆なす',emoji:'🍆',category:'main',tool:'hc-l',cuisine:'中華',source:'ホットクック',time:20,servings:4,kcal:320,p:14,f:18,c:22,
+ ingredients:[{n:'豚ひき肉',a:'200g',c:'肉類'},{n:'なす',a:'4本',c:'野菜'},{n:'長ねぎ',a:'1/2本',c:'野菜'},{n:'麻婆なすの素(甘口)',a:'1袋',c:'調味料'}],
+ steps:['なすを乱切り、ねぎみじん切り','内鍋に全材料','ホットクック手動「煮る」10分'],
+ hcMode:'手動:煮る10分',
+ kidTip:'甘口の素で。なすが苦手な子は皮を剥いても。',
+ hide:'',tags:['中華']},
+
+{id:'chicken-shio',name:'鶏の塩麹煮',emoji:'🍗',category:'main',tool:'hc-l',cuisine:'和食',source:'ホットクック',time:25,servings:4,kcal:340,p:30,f:12,c:16,
+ ingredients:[{n:'鶏もも肉',a:'500g',c:'肉類'},{n:'塩麹',a:'大3',c:'調味料'},{n:'長ねぎ',a:'1本',c:'野菜'},{n:'しょうが',a:'1片',c:'野菜'},{n:'酒',a:'大2',c:'調味料'}],
+ steps:['鶏肉に塩麹をもみ込み30分置く','内鍋に全材料','ホットクック手動「煮る」20分'],
+ hcMode:'手動:煮る20分',
+ kidTip:'塩麹で柔らかく旨味アップ。',
+ hide:'',tags:['和食','やさしい味']},
+
+{id:'pulkogi',name:'プルコギ',emoji:'🥩',category:'main',tool:'hc-l',cuisine:'その他',source:'ホットクック',time:20,servings:4,kcal:460,p:26,f:22,c:30,
+ ingredients:[{n:'牛こま切れ肉',a:'400g',c:'肉類'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'ピーマン',a:'2個',c:'野菜'},{n:'焼肉のたれ',a:'大5',c:'調味料'},{n:'ごま油',a:'大1',c:'調味料'}],
+ steps:['野菜を細切り','内鍋に全材料','ホットクック手動「煮る」15分'],
+ hcMode:'手動:煮る15分',
+ kidTip:'焼肉のたれの甘辛味で子どもも大好き。',
+ hide:'',tags:['その他','子ども好き']},
+
+// ====== 追加: ホットクック副菜/汁物(小) ======
+{id:'chikuzenni',name:'筑前煮',emoji:'🥘',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:30,servings:4,kcal:160,p:8,f:5,c:22,
+ ingredients:[{n:'鶏もも肉',a:'150g',c:'肉類'},{n:'れんこん',a:'100g',c:'野菜'},{n:'ごぼう',a:'1/2本',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'こんにゃく',a:'1/2枚',c:'その他'},{n:'しいたけ',a:'3枚',c:'野菜'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'}],
+ steps:['材料を一口大に切る','内鍋に全部','ホットクック自動「筑前煮」'],
+ hcMode:'自動「筑前煮」約30分',
+ kidTip:'根菜の甘みが染みる。具は小さめに。',
+ hide:'',tags:['和食','常備菜']},
+
+{id:'kiriboshi',name:'切り干し大根',emoji:'🥗',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:20,servings:4,kcal:90,p:3,f:2,c:16,
+ ingredients:[{n:'切り干し大根',a:'30g',c:'その他'},{n:'にんじん',a:'1/3本',c:'野菜'},{n:'油揚げ',a:'1枚',c:'卵・豆腐'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'だし',a:'300ml',c:'調味料'}],
+ steps:['切り干し大根を水で戻す','にんじん千切り、油揚げ細切り','内鍋に全部','ホットクック手動「煮る」15分'],
+ hcMode:'手動:煮る15分',
+ kidTip:'甘めに調整。お弁当にも◎',
+ hide:'',tags:['和食','常備菜']},
+
+{id:'gomaae',name:'ほうれん草のごま和え',emoji:'🥬',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:15,servings:4,kcal:70,p:4,f:3,c:6,
+ ingredients:[{n:'ほうれん草',a:'1束',c:'野菜'},{n:'すりごま',a:'大3',c:'調味料'},{n:'醤油',a:'大1',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'}],
+ steps:['ホットクックで蒸す5分','水気絞って3cmに','ごま・醤油・砂糖で和える'],
+ hcMode:'蒸し板で蒸す5分',
+ kidTip:'ごまの風味で食べやすい。',
+ hide:'',tags:['和食','副菜']},
+
+{id:'chawan',name:'茶碗蒸し',emoji:'🥣',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:20,servings:4,kcal:110,p:8,f:6,c:4,
+ ingredients:[{n:'卵',a:'3個',c:'卵・豆腐'},{n:'鶏肉',a:'100g',c:'肉類'},{n:'しいたけ',a:'2枚',c:'野菜'},{n:'かまぼこ',a:'4切れ',c:'魚介'},{n:'だし',a:'400ml',c:'調味料'},{n:'醤油',a:'小2',c:'調味料'},{n:'みりん',a:'小2',c:'調味料'}],
+ steps:['卵液を作る','器に具材と卵液','ホットクックで蒸す15分'],
+ hcMode:'蒸し板で蒸す15分',
+ kidTip:'つるんと食べやすい。子ども大好き。',
+ hide:'',tags:['和食','子ども好き']},
+
+{id:'asari-miso',name:'あさりの味噌汁',emoji:'🦪',category:'soup',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:15,servings:4,kcal:70,p:8,f:2,c:6,
+ ingredients:[{n:'あさり',a:'300g',c:'魚介'},{n:'味噌',a:'大2',c:'調味料'},{n:'長ねぎ',a:'少々',c:'野菜'},{n:'水',a:'800ml',c:'調味料'}],
+ steps:['あさりを砂抜き','内鍋に水・あさり','ホットクック手動「煮る」10分','味噌を溶く'],
+ hcMode:'手動:煮る10分',
+ kidTip:'貝の旨味が出汁に。',
+ hide:'',tags:['和食','汁物']},
+
+{id:'satsumaimo',name:'さつまいもの甘煮',emoji:'🍠',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:20,servings:4,kcal:180,p:2,f:1,c:40,
+ ingredients:[{n:'さつまいも',a:'1本',c:'野菜'},{n:'砂糖',a:'大2',c:'調味料'},{n:'醤油',a:'小1',c:'調味料'},{n:'水',a:'200ml',c:'調味料'}],
+ steps:['さつまいもを輪切り','内鍋に全部','ホットクック手動「煮る」15分'],
+ hcMode:'手動:煮る15分',
+ kidTip:'甘くて子ども大好き。おやつにも。',
+ hide:'',tags:['和食','子ども好き']},
+
+{id:'nasu-nibitashi',name:'なすの煮浸し',emoji:'🍆',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:15,servings:4,kcal:70,p:2,f:3,c:10,
+ ingredients:[{n:'なす',a:'4本',c:'野菜'},{n:'めんつゆ',a:'大3',c:'調味料'},{n:'水',a:'200ml',c:'調味料'},{n:'しょうが',a:'1片',c:'野菜'}],
+ steps:['なすを縦半分に切って切り込み','内鍋になす・めんつゆ・水','ホットクック手動「煮る」10分'],
+ hcMode:'手動:煮る10分',
+ kidTip:'なすが苦手なら皮を剥いても。',
+ hide:'',tags:['和食','副菜']},
+
+{id:'kabocha-soup',name:'かぼちゃのポタージュ',emoji:'🎃',category:'soup',tool:'hc-s',cuisine:'洋食',source:'ホットクック',time:25,servings:4,kcal:180,p:5,f:8,c:24,
+ ingredients:[{n:'かぼちゃ',a:'1/4個',c:'野菜'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'牛乳',a:'400ml',c:'乳製品'},{n:'コンソメ',a:'1個',c:'調味料'},{n:'バター',a:'10g',c:'調味料'}],
+ steps:['かぼちゃ・玉ねぎを切る','内鍋に全部','ホットクック手動「スープ」15分','ブレンダーでなめらかに'],
+ hcMode:'手動:スープ15分',
+ kidTip:'かぼちゃの甘みたっぷり。子ども大好き。',
+ hide:'',tags:['洋食','汁物','子ども好き']},
+
+{id:'gomokumame',name:'五目豆',emoji:'🫘',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:30,servings:4,kcal:150,p:8,f:3,c:22,
+ ingredients:[{n:'大豆水煮',a:'1袋',c:'その他'},{n:'にんじん',a:'1/3本',c:'野菜'},{n:'こんにゃく',a:'1/3枚',c:'その他'},{n:'昆布',a:'5cm',c:'その他'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'}],
+ steps:['材料を小さく切る','内鍋に全部','ホットクック手動「煮る」25分'],
+ hcMode:'手動:煮る25分',
+ kidTip:'甘めで食べやすい。常備菜に。',
+ hide:'',tags:['和食','常備菜']},
+
+// ====== 追加: ガス調理(山本ゆり風) ======
+{id:'oyakodon',name:'親子丼',emoji:'🍚',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',time:15,servings:4,kcal:580,p:28,f:15,c:82,
+ ingredients:[{n:'鶏もも肉',a:'300g',c:'肉類'},{n:'卵',a:'4個',c:'卵・豆腐'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'めんつゆ',a:'大5',c:'調味料'},{n:'水',a:'200ml',c:'調味料'},{n:'ご飯',a:'3膳',c:'その他'}],
+ steps:['鶏肉と玉ねぎをめんつゆで煮る','卵を溶いて回し入れる','ご飯にかける'],
+ hcMode:'',
+ kidTip:'子ども定番。ふわとろ卵で食べやすい。',
+ hide:'',tags:['和食','どんぶり','子ども好き']},
+
+{id:'katsudon',name:'カツ丼',emoji:'🍚',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',time:20,servings:4,kcal:780,p:30,f:35,c:85,
+ ingredients:[{n:'豚ロース(厚切り)',a:'4枚',c:'肉類'},{n:'卵',a:'4個',c:'卵・豆腐'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'パン粉',a:'適量',c:'調味料'},{n:'めんつゆ',a:'大5',c:'調味料'},{n:'ご飯',a:'3膳',c:'その他'}],
+ steps:['豚にパン粉をまぶして揚げ焼き','玉ねぎをめんつゆで煮てカツをのせ卵','ご飯にかける'],
+ hcMode:'',
+ kidTip:'カツを小さく切って食べやすく。',
+ hide:'',tags:['和食','どんぶり','ご馳走']},
+
+{id:'chapche',name:'チャプチェ',emoji:'🍝',category:'main',tool:'stove',cuisine:'その他',source:'山本ゆり',time:20,servings:4,kcal:420,p:18,f:15,c:55,
+ ingredients:[{n:'春雨',a:'200g',c:'その他'},{n:'牛こま肉',a:'200g',c:'肉類'},{n:'ピーマン',a:'2個',c:'野菜'},{n:'にんじん',a:'1/2本',c:'野菜'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'醤油',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'ごま油',a:'大1',c:'調味料'}],
+ steps:['春雨を戻す','野菜・肉を炒める','春雨と調味料で味付け'],
+ hcMode:'',
+ kidTip:'甘めの味で子どもも好き。',
+ hide:'野菜を細切り',tags:['その他']},
+
+{id:'tonkatsu',name:'とんかつ',emoji:'🍖',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',time:25,servings:4,kcal:680,p:30,f:35,c:55,
+ ingredients:[{n:'豚ロース',a:'4枚',c:'肉類'},{n:'小麦粉',a:'適量',c:'調味料'},{n:'卵',a:'1個',c:'卵・豆腐'},{n:'パン粉',a:'適量',c:'調味料'},{n:'揚げ油',a:'適量',c:'調味料'},{n:'キャベツ',a:'1/4個',c:'野菜'},{n:'ソース',a:'適量',c:'調味料'}],
+ steps:['豚に塩こしょう、粉→卵→パン粉','170度でカラッと揚げる','キャベツ千切りを添える'],
+ hcMode:'',
+ kidTip:'サクサクで子ども大好き。',
+ hide:'',tags:['和食','ご馳走']},
+
+{id:'okonomi',name:'お好み焼き',emoji:'🥞',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',time:30,servings:4,kcal:520,p:22,f:22,c:60,
+ ingredients:[{n:'お好み焼き粉',a:'200g',c:'その他'},{n:'キャベツ',a:'1/4個',c:'野菜'},{n:'豚バラ',a:'200g',c:'肉類'},{n:'卵',a:'4個',c:'卵・豆腐'},{n:'水',a:'200ml',c:'調味料'},{n:'お好みソース',a:'適量',c:'調味料'},{n:'マヨネーズ',a:'適量',c:'調味料'}],
+ steps:['粉・水・卵・キャベツを混ぜる','フライパンで豚と焼く','ソース・マヨ'],
+ hcMode:'',
+ kidTip:'子どもと一緒に作れて楽しい。',
+ hide:'キャベツたっぷり',tags:['和食','子ども好き']},
+
+{id:'kaiten-niku',name:'回鍋肉',emoji:'🥬',category:'main',tool:'stove',cuisine:'中華',source:'山本ゆり',time:15,servings:4,kcal:420,p:22,f:24,c:22,
+ ingredients:[{n:'豚バラ肉',a:'300g',c:'肉類'},{n:'キャベツ',a:'1/4個',c:'野菜'},{n:'ピーマン',a:'2個',c:'野菜'},{n:'回鍋肉の素(甘口)',a:'1袋',c:'調味料'}],
+ steps:['豚肉を炒める','野菜を加える','素で味付け'],
+ hcMode:'',
+ kidTip:'甘めの素で子ども対応。',
+ hide:'',tags:['中華']},
+
+{id:'ebi-mayo',name:'エビマヨ',emoji:'🍤',category:'main',tool:'stove',cuisine:'中華',source:'山本ゆり',time:20,servings:4,kcal:380,p:20,f:22,c:24,
+ ingredients:[{n:'むきエビ',a:'300g',c:'魚介'},{n:'片栗粉',a:'大2',c:'調味料'},{n:'マヨネーズ',a:'大4',c:'調味料'},{n:'ケチャップ',a:'大1',c:'調味料'},{n:'練乳',a:'小2',c:'調味料'}],
+ steps:['エビに片栗粉','揚げ焼き','マヨソースで和える'],
+ hcMode:'',
+ kidTip:'甘めで子ども大好き。',
+ hide:'',tags:['中華','子ども好き']},
+
+{id:'tacorice',name:'タコライス',emoji:'🌮',category:'main',tool:'stove',cuisine:'洋食',source:'山本ゆり',time:15,servings:4,kcal:560,p:24,f:20,c:72,
+ ingredients:[{n:'合いびき肉',a:'300g',c:'肉類'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'レタス',a:'1/4個',c:'野菜'},{n:'トマト',a:'1個',c:'野菜'},{n:'チーズ',a:'50g',c:'乳製品'},{n:'タコスミックス',a:'1袋',c:'調味料'},{n:'ご飯',a:'3膳',c:'その他'}],
+ steps:['ひき肉と玉ねぎをタコスミックスで炒める','ご飯に具材・野菜・チーズをトッピング'],
+ hcMode:'',
+ kidTip:'辛くないミックスを選ぶ。チーズで子どもも食べやすい。',
+ hide:'',tags:['洋食','子ども好き']},
+
+{id:'aji-fry',name:'アジフライ',emoji:'🐟',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',time:25,servings:4,kcal:420,p:26,f:22,c:30,
+ ingredients:[{n:'アジ',a:'4尾(3枚おろし)',c:'魚介'},{n:'小麦粉',a:'適量',c:'調味料'},{n:'卵',a:'1個',c:'卵・豆腐'},{n:'パン粉',a:'適量',c:'調味料'},{n:'揚げ油',a:'適量',c:'調味料'}],
+ steps:['アジに粉・卵・パン粉','170度で揚げる'],
+ hcMode:'',
+ kidTip:'骨を取って食べやすく。',
+ hide:'',tags:['和食','魚']},
+
+{id:'tofu-steak',name:'豆腐ステーキ',emoji:'🥢',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',time:15,servings:4,kcal:260,p:18,f:12,c:18,
+ ingredients:[{n:'木綿豆腐',a:'2丁',c:'卵・豆腐'},{n:'片栗粉',a:'大2',c:'調味料'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'バター',a:'10g',c:'調味料'}],
+ steps:['豆腐の水切り→片栗粉','フライパンで両面焼き','調味料で照り焼き風'],
+ hcMode:'',
+ kidTip:'豆腐が主役でヘルシー。',
+ hide:'',tags:['和食']},
+
+{id:'chickenham',name:'鶏ハム',emoji:'🍗',category:'main',tool:'stove',cuisine:'洋食',source:'山本ゆり',time:30,servings:4,kcal:220,p:28,f:8,c:5,
+ ingredients:[{n:'鶏むね肉',a:'2枚',c:'肉類'},{n:'砂糖',a:'小2',c:'調味料'},{n:'塩',a:'小2',c:'調味料'},{n:'にんにく',a:'1片',c:'野菜'}],
+ steps:['むね肉に砂糖・塩をもみ込み一晩置く','ラップで巻いて沸騰湯で1分→火を止めて放置1時間'],
+ hcMode:'',
+ kidTip:'しっとり仕上がって子どもも好き。',
+ hide:'',tags:['洋食','作り置き']},
+
+// ====== 追加: 副菜(ガス) ======
+{id:'namul',name:'ほうれん草ナムル',emoji:'🥬',category:'sub',tool:'stove',cuisine:'その他',source:'山本ゆり',time:10,servings:4,kcal:50,p:3,f:3,c:4,
+ ingredients:[{n:'ほうれん草',a:'1束',c:'野菜'},{n:'ごま油',a:'大1',c:'調味料'},{n:'鶏ガラスープ',a:'小1',c:'調味料'},{n:'白ごま',a:'適量',c:'調味料'},{n:'にんにく',a:'少々',c:'野菜'}],
+ steps:['ほうれん草を茹でて水気絞り','調味料で和える'],
+ hcMode:'',
+ kidTip:'ごまの香ばしさで食べやすい。',
+ hide:'',tags:['その他','副菜']},
+
+{id:'moyashi-namul',name:'もやしナムル',emoji:'🌱',category:'sub',tool:'stove',cuisine:'その他',source:'山本ゆり',time:10,servings:4,kcal:50,p:3,f:3,c:5,
+ ingredients:[{n:'もやし',a:'1袋',c:'野菜'},{n:'ごま油',a:'大1',c:'調味料'},{n:'鶏ガラスープ',a:'小1',c:'調味料'},{n:'塩',a:'少々',c:'調味料'},{n:'白ごま',a:'適量',c:'調味料'}],
+ steps:['もやしをさっと茹でて水気','調味料で和える'],
+ hcMode:'',
+ kidTip:'シャキシャキで子どもも好き。',
+ hide:'',tags:['その他','副菜']},
+
+{id:'haruharu',name:'春雨サラダ',emoji:'🥗',category:'sub',tool:'stove',cuisine:'中華',source:'山本ゆり',time:15,servings:4,kcal:110,p:4,f:4,c:18,
+ ingredients:[{n:'春雨',a:'50g',c:'その他'},{n:'きゅうり',a:'1本',c:'野菜'},{n:'ハム',a:'2枚',c:'肉類'},{n:'卵',a:'1個',c:'卵・豆腐'},{n:'醤油',a:'大1',c:'調味料'},{n:'酢',a:'大1',c:'調味料'},{n:'砂糖',a:'小2',c:'調味料'},{n:'ごま油',a:'小1',c:'調味料'}],
+ steps:['春雨を戻す','錦糸卵、きゅうり・ハム細切り','調味料で和える'],
+ hcMode:'',
+ kidTip:'さっぱりで食べやすい。',
+ hide:'',tags:['中華','副菜']},
+
+{id:'coleslaw',name:'コールスロー',emoji:'🥗',category:'sub',tool:'stove',cuisine:'洋食',source:'山本ゆり',time:10,servings:4,kcal:100,p:2,f:7,c:8,
+ ingredients:[{n:'キャベツ',a:'1/4個',c:'野菜'},{n:'にんじん',a:'1/3本',c:'野菜'},{n:'コーン缶',a:'大3',c:'その他'},{n:'マヨネーズ',a:'大3',c:'調味料'},{n:'酢',a:'小1',c:'調味料'},{n:'砂糖',a:'小1',c:'調味料'}],
+ steps:['キャベツ・にんじん千切り塩もみ','水気絞ってマヨで和える'],
+ hcMode:'',
+ kidTip:'甘めで子ども大好き。',
+ hide:'',tags:['洋食','副菜']},
+
+{id:'daigaku',name:'大学芋',emoji:'🍠',category:'sub',tool:'stove',cuisine:'和食',source:'山本ゆり',time:20,servings:4,kcal:240,p:2,f:10,c:38,
+ ingredients:[{n:'さつまいも',a:'1本',c:'野菜'},{n:'砂糖',a:'大3',c:'調味料'},{n:'醤油',a:'小1',c:'調味料'},{n:'揚げ油',a:'適量',c:'調味料'},{n:'黒ごま',a:'適量',c:'調味料'}],
+ steps:['さつまいもを乱切り','揚げる','砂糖・醤油で絡める'],
+ hcMode:'',
+ kidTip:'おやつ感覚で子ども大好き。',
+ hide:'',tags:['和食','子ども好き']},
+
+{id:'macaroni-salad',name:'マカロニサラダ',emoji:'🥗',category:'sub',tool:'stove',cuisine:'洋食',source:'山本ゆり',time:15,servings:4,kcal:180,p:5,f:10,c:20,
+ ingredients:[{n:'マカロニ',a:'100g',c:'その他'},{n:'きゅうり',a:'1本',c:'野菜'},{n:'ハム',a:'3枚',c:'肉類'},{n:'ゆで卵',a:'2個',c:'卵・豆腐'},{n:'マヨネーズ',a:'大4',c:'調味料'},{n:'塩こしょう',a:'少々',c:'調味料'}],
+ steps:['マカロニを茹でる','具材と合わせてマヨで和える'],
+ hcMode:'',
+ kidTip:'子ども定番。',
+ hide:'',tags:['洋食','子ども好き']},
+
+{id:'corn-butter',name:'コーンバター',emoji:'🌽',category:'sub',tool:'stove',cuisine:'洋食',source:'山本ゆり',time:5,servings:4,kcal:120,p:3,f:6,c:15,
+ ingredients:[{n:'コーン缶',a:'1缶',c:'その他'},{n:'バター',a:'10g',c:'調味料'},{n:'醤油',a:'小1',c:'調味料'}],
+ steps:['コーンを炒める','バター・醤油で味付け'],
+ hcMode:'',
+ kidTip:'甘くて大人気。5分で一品。',
+ hide:'',tags:['洋食','子ども好き']},
+
+{id:'atsuage-steak',name:'厚揚げステーキ',emoji:'🥢',category:'sub',tool:'stove',cuisine:'和食',source:'山本ゆり',time:10,servings:4,kcal:180,p:12,f:12,c:6,
+ ingredients:[{n:'厚揚げ',a:'2枚',c:'卵・豆腐'},{n:'長ねぎ',a:'少々',c:'野菜'},{n:'しょうが',a:'少々',c:'野菜'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大1',c:'調味料'}],
+ steps:['厚揚げを両面焼き','醤油・みりんで味付け','薬味を散らす'],
+ hcMode:'',
+ kidTip:'ボリュームあって満足感。',
+ hide:'',tags:['和食','副菜']}
+];
+
+/* ==============================
+   よく使う食材 クイック入力
+   ============================== */
+const QUICK_INGREDIENTS = {
+  '肉類':['鶏もも肉','鶏むね肉','豚バラ','豚こま','豚肉','牛肉','合い挽き肉','ベーコン','ウインナー','ハム'],
+  '魚介':['サバ','鮭','冷凍鮭','ぶり','エビ','じゃこ','しらす','あさり'],
+  '卵・豆腐':['卵','絹豆腐','木綿豆腐','豆腐','油揚げ','厚揚げ','納豆'],
+  '野菜':['キャベツ','玉ねぎ','じゃがいも','にんじん','大根','ほうれん草','小松菜','ピーマン','もやし','長ねぎ','白ネギ','トマト','きゅうり','レタス','ごぼう','しょうが','にんにく','ニラ','えのき','しめじ','しいたけ','なす','かぼちゃ'],
+  '乳製品':['牛乳','チーズ','バター','ヨーグルト'],
+  '調味料':['醤油','味噌','砂糖','みりん','酢','ケチャップ','マヨネーズ','だし']
+};
+
+// 献立に使わない食材（本人消費用など）
+const EXCLUDED_INGREDIENTS = ['ヨーグルト'];
+
+/* ==============================
+   ユーティリティ
+   ============================== */
+const DAYS = ['月','火','水','木','金','土','日'];
+const DAY_KEY = ['mon','tue','wed','thu','fri','sat','sun'];
+const TODAY = new Date();
+
+const store = {
+  get(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch{return def}},
+  set(k,v){localStorage.setItem(k,JSON.stringify(v))}
+};
+
+const STATE = {
+  currentWeek: store.get('currentWeek',1), // 1-4
+  currentDay: store.get('currentDay',0), // 0-6
+  inventory: store.get('inventory',[]), // [{name,expire,addedAt}]
+  plan: store.get('plan',null), // {w1:[{main,sub,soup,feedback},...]*7, w2,...}
+  filter: 'all',
+  quickCat: 'お肉'
+};
+
+function save(){
+  store.set('currentWeek',STATE.currentWeek);
+  store.set('currentDay',STATE.currentDay);
+  store.set('inventory',STATE.inventory);
+  store.set('plan',STATE.plan);
+}
+
+/* ==============================
+   献立自動生成
+   ============================== */
+function isExcluded(recipe){
+  return recipe.ingredients.some(ing=>
+    EXCLUDED_INGREDIENTS.some(ex=>ing.n.includes(ex))
+  );
+}
+function invMatchCount(recipe,inv){
+  return recipe.ingredients.filter(ing=>
+    inv.some(x=>ing.n.includes(x)||x.includes(ing.n))
+  ).length;
+}
+
+function generatePlan(opts={}){
+  const inv = STATE.inventory.map(i=>i.name);
+  const available = RECIPES.filter(r=>!isExcluded(r));
+  const mains = available.filter(r=>r.category==='main');
+  const subs  = available.filter(r=>r.category==='sub');
+  const soups = available.filter(r=>r.category==='soup');
+
+  // 在庫優先モード: 在庫マッチ数を強く重み付け
+  const inventoryFirst = opts.inventoryFirst || inv.length>0;
+
+  function score(recipe){
+    const match = invMatchCount(recipe,inv);
+    if(inventoryFirst){
+      return match*10 + Math.random();
+    }
+    return match*0.5 + Math.random();
+  }
+  function pick(list,count){
+    const sorted = [...list].sort((a,b)=>score(b)-score(a));
+    const chosen=[];
+    for(const r of sorted){
+      if(chosen.length>=count)break;
+      // 直近と同じ料理はスキップ、同カテゴリ(和洋中)の連続も抑制
+      if(chosen.some(c=>c.id===r.id))continue;
+      if(chosen.length>=1 && chosen[chosen.length-1].cuisine===r.cuisine && Math.random()<0.4)continue;
+      chosen.push(r);
+    }
+    // 足りない場合は重複許容で埋める
+    while(chosen.length<count && sorted.length){
+      chosen.push(sorted[chosen.length%sorted.length]);
+    }
+    return chosen;
+  }
+
+  const plan={};
+  for(let w=1;w<=4;w++){
+    const days=[];
+    const weekMains = pick(mains,7);
+    const weekSubs  = pick(subs,7);
+    const weekSoups = pick(soups,7);
+    for(let d=0;d<7;d++){
+      days.push({
+        main: weekMains[d].id,
+        sub:  weekSubs[d].id,
+        soup: weekSoups[d].id,
+        feedback:{},
+        memo:'',
+        extras:[]
+      });
+    }
+    plan['w'+w]=days;
+  }
+  STATE.plan=plan;
+  save();
+}
+
+// 在庫で3日分だけ生成（現在週の月〜水を上書き、残りは既存のまま）
+function generateThreeDays(){
+  const inv = STATE.inventory.map(i=>i.name);
+  if(inv.length===0){
+    alert('冷蔵庫タブで食材を登録してから実行してください');
+    return;
+  }
+  const available = RECIPES.filter(r=>!isExcluded(r));
+  const mains = available.filter(r=>r.category==='main').sort((a,b)=>invMatchCount(b,inv)-invMatchCount(a,inv));
+  const subs  = available.filter(r=>r.category==='sub').sort((a,b)=>invMatchCount(b,inv)-invMatchCount(a,inv));
+  const soups = available.filter(r=>r.category==='soup').sort((a,b)=>invMatchCount(b,inv)-invMatchCount(a,inv));
+
+  const week = STATE.plan['w'+STATE.currentWeek];
+  const usedMain=new Set(), usedSub=new Set(), usedSoup=new Set();
+  function pickUnique(pool, used){
+    for(const r of pool){ if(!used.has(r.id)){used.add(r.id); return r;} }
+    return pool[0];
+  }
+  for(let i=0;i<3;i++){
+    week[i] = {
+      main: pickUnique(mains,usedMain).id,
+      sub:  pickUnique(subs,usedSub).id,
+      soup: pickUnique(soups,usedSoup).id,
+      feedback:{}, memo:'', extras:[]
+    };
+  }
+  save();
+}
+
+function regenDay(w,d){
+  const mains = RECIPES.filter(r=>r.category==='main');
+  const subs = RECIPES.filter(r=>r.category==='sub');
+  const soups = RECIPES.filter(r=>r.category==='soup');
+  STATE.plan['w'+w][d] = {
+    main: mains[Math.floor(Math.random()*mains.length)].id,
+    sub: subs[Math.floor(Math.random()*subs.length)].id,
+    soup: soups[Math.floor(Math.random()*soups.length)].id,
+    feedback:{}
+  };
+  save();
+  render();
+}
+
+function getRecipe(id){return RECIPES.find(r=>r.id===id)}
+
+/* ==============================
+   同時調理スケジューラ
+   3レーン(L/S/G)に振り分け、プレップ5分シリアル+調理並列
+   ============================== */
+function scheduleDay(main, sub, soup){
+  const PREP = 5;
+  const items = [
+    {...main, slot:'主菜'},
+    {...sub,  slot:'副菜'},
+    {...soup, slot:'汁物'}
+  ];
+
+  let L = items.filter(d=>d.tool==='hc-l');
+  let S = items.filter(d=>d.tool==='hc-s');
+  let G = items.filter(d=>d.tool==='stove');
+
+  const notices = [];
+
+  // 最適化1: HC-L枠が空で、HC-Sが2品以上 → 長い方を大鍋へ
+  if(L.length===0 && S.length>=2){
+    const longest = S.reduce((a,b)=>a.time>b.time?a:b);
+    S = S.filter(d=>d!==longest);
+    L.push({...longest, _moved:true});
+    notices.push(`🔀 <b>${longest.emoji} ${longest.name}</b>を大鍋(L)へ移動（小鍋が空いて副菜を並行調理できます）`);
+  }
+
+  // 最適化2: HC-L枠に2品以上（主菜+移動品）の場合はそのまま直列、S空きを活用
+  // 最適化3: HC-Sが2品（主菜がgで副菜・汁物ともhc-s）→ 短い方をガスに回すと総時間短縮
+  if(S.length>=2 && G.length===0){
+    const shortest = S.reduce((a,b)=>a.time<b.time?a:b);
+    // If shortest is a simple soup/sub that could be stove-cooked, move it
+    if(shortest.time<=15){
+      S = S.filter(d=>d!==shortest);
+      G.push({...shortest, _moved:true});
+      notices.push(`🔀 <b>${shortest.emoji} ${shortest.name}</b>をガス調理へ（調理時間短く並行化が効率的）`);
+    }
+  }
+
+  // スケジューリング: プレップは1人作業でシリアル、調理は並列
+  // プレップ優先順位: 最も長い調理(大きな時間)から着手して遊ばせない
+  const tracks = {L:[], S:[], G:[]};
+  const allForPrep = [
+    ...L.map(d=>({...d,track:'L'})),
+    ...S.map(d=>({...d,track:'S'})),
+    ...G.map(d=>({...d,track:'G'}))
+  ].sort((a,b)=>{
+    // HC(unattended)を先にプレップ、その中でも長いものから
+    const pri = {L:0, S:1, G:2};
+    if(pri[a.track]!==pri[b.track])return pri[a.track]-pri[b.track];
+    return b.time-a.time;
+  });
+
+  let prepCursor = 0;
+  const trackCookCursor = {L:0, S:0, G:0};
+  allForPrep.forEach(d=>{
+    const prepStart = prepCursor;
+    const prepEnd = prepStart + PREP;
+    prepCursor = prepEnd;
+    const cookStart = Math.max(prepEnd, trackCookCursor[d.track]);
+    const cookEnd = cookStart + d.time;
+    trackCookCursor[d.track] = cookEnd;
+    tracks[d.track].push({
+      name:d.name, emoji:d.emoji, slot:d.slot,
+      prepStart, prepEnd, cookStart, cookEnd,
+      time:d.time, hcMode:d.hcMode||'ガス調理',
+      moved:d._moved||false
+    });
+  });
+
+  const total = Math.max(
+    ...tracks.L.map(t=>t.cookEnd),
+    ...tracks.S.map(t=>t.cookEnd),
+    ...tracks.G.map(t=>t.cookEnd),
+    0
+  );
+
+  // イベント列（時系列で並べて表示）
+  const events = [];
+  ['L','S','G'].forEach(tr=>{
+    tracks[tr].forEach(t=>{
+      events.push({time:t.prepStart, type:'prep', track:tr, item:t});
+      if(tr!=='G')events.push({time:t.cookStart, type:'start', track:tr, item:t});
+      events.push({time:t.cookEnd, type:'done', track:tr, item:t});
+    });
+  });
+  events.sort((a,b)=>a.time-b.time || (a.type==='done'?1:-1));
+
+  return {tracks, total, events, notices};
+}
+
+function fmtMin(m){
+  const mm = Math.round(m);
+  return String(mm).padStart(2,'0')+'分';
+}
+
+/* ==============================
+   食材カテゴリ自動判定
+   ============================== */
+function guessCategory(name){
+  const pats = {
+    '野菜':/キャベツ|玉ねぎ|じゃがいも|にんじん|大根|ほうれん草|ピーマン|もやし|ねぎ|トマト|きゅうり|ごぼう|しょうが|にんにく|ニラ|きのこ|レタス|白菜|なす|かぼちゃ|ブロッコリー|アスパラ|れんこん|しいたけ|小松菜|水菜|豆苗|セロリ|パプリカ|オクラ/,
+    '肉類':/鶏|豚|牛|ひき肉|挽き肉|ハム|ベーコン|ウインナー|ソーセージ|手羽|バラ|ロース|こま/,
+    '魚介':/鮭|サバ|ぶり|エビ|イカ|タコ|アジ|マグロ|シーフード|貝|ホタテ|カニ|たら|ししゃも|じゃこ|しらす/,
+    '卵・豆腐':/卵|豆腐|油揚げ|厚揚げ|がんも/,
+    '乳製品':/牛乳|チーズ|ヨーグルト|バター|生クリーム/,
+    '調味料':/醤油|味噌|砂糖|みりん|酒|酢|塩|こしょう|油|マヨ|ケチャップ|ソース|ルー|だし|コンソメ|鶏ガラ|ごま/,
+    'その他':/ご飯|パン|麺|パスタ|うどん|そば|春雨|のり|わかめ|豆|こんにゃく|しらたき|ケーキ|お菓子|フルーツ|果物|アイス|ジュース|お茶/
+  };
+  for(const [k,re] of Object.entries(pats)){
+    if(re.test(name))return k;
+  }
+  return 'その他';
+}
+function catIcon(c){
+  return {'野菜':'🥬','肉類':'🥩','魚介':'🐟','卵・豆腐':'🥚','乳製品':'🥛','調味料':'🧂','その他':'📦'}[c]||'📦';
+}
+
+function renderSchedule(main, sub, soup){
+  const sch = scheduleDay(main, sub, soup);
+  const total = sch.total || 1;
+
+  function bars(track, cls){
+    return sch.tracks[track].map(t=>{
+      const prepW = ((t.prepEnd-t.prepStart)/total*100).toFixed(1);
+      const prepL = (t.prepStart/total*100).toFixed(1);
+      const cookW = ((t.cookEnd-t.cookStart)/total*100).toFixed(1);
+      const cookL = (t.cookStart/total*100).toFixed(1);
+      return `
+        <div class="gantt-bar gantt-prep" style="left:${prepL}%;width:${prepW}%" title="${t.name} 準備 5分">準備</div>
+        <div class="gantt-bar gantt-cook-${cls}" style="left:${cookL}%;width:${cookW}%" title="${t.name} ${t.time}分">${t.emoji} ${t.name}</div>
+      `;
+    }).join('');
+  }
+
+  const mid = Math.round(total/2);
+
+  const eventsHTML = sch.events.map(ev=>{
+    const trackIcon = ev.track==='L'?'🔥L':ev.track==='S'?'🔥S':'🍳';
+    if(ev.type==='prep'){
+      return `<div class="seq-row start">
+        <div class="seq-time">${fmtMin(ev.time)}</div>
+        <div class="seq-icon">${ev.item.emoji}</div>
+        <div class="seq-text"><b>${trackIcon}</b> ${ev.item.name} を準備・投入 <span class="seq-note">${ev.item.hcMode}</span></div>
+      </div>`;
+    }
+    if(ev.type==='start'){
+      return `<div class="seq-row">
+        <div class="seq-time">${fmtMin(ev.time)}</div>
+        <div class="seq-icon">▶️</div>
+        <div class="seq-text"><b>${trackIcon}</b> ${ev.item.name} 調理スタート（${ev.item.time}分）</div>
+      </div>`;
+    }
+    return `<div class="seq-row done">
+      <div class="seq-time">${fmtMin(ev.time)}</div>
+      <div class="seq-icon">✅</div>
+      <div class="seq-text"><b>${trackIcon}</b> ${ev.item.name} 完成 🎉</div>
+    </div>`;
+  }).join('');
+
+  const noticesHTML = sch.notices.length ? `
+    <div class="opt-tip">
+      <strong>⚡ 自動最適化</strong>
+      ${sch.notices.join('<br>')}
+    </div>` : '';
+
+  const allGas = sch.tracks.L.length===0 && sch.tracks.S.length===0;
+  const allHC = sch.tracks.G.length===0;
+  let meta = '';
+  if(allGas) meta = '今日はガス中心。ホットクックは使いません。';
+  else if(allHC) meta = '今日は全品ホットクック調理。手が空いて楽チン✨';
+
+  return `
+  <details class="sim" open>
+    <summary>⚡ 同時調理タイムライン <span style="color:var(--g2)">約${total}分</span></summary>
+
+    ${noticesHTML}
+    ${meta?`<div class="note" style="margin:6px 0">${meta}</div>`:''}
+
+    <div class="gantt">
+      <div class="gantt-row">
+        <div class="gantt-label">🔥L<br>大鍋</div>
+        <div class="gantt-track">${sch.tracks.L.length?bars('L','l'):'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray)">なし</div>'}</div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-label">🔥S<br>小鍋</div>
+        <div class="gantt-track">${sch.tracks.S.length?bars('S','s'):'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray)">なし</div>'}</div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-label">🍳<br>ガス</div>
+        <div class="gantt-track">${sch.tracks.G.length?bars('G','g'):'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray)">なし</div>'}</div>
+      </div>
+      <div class="gantt-timeline">
+        <span>0分</span><span>${mid}分</span><span>${total}分</span>
+      </div>
+      <div class="gantt-total">⏱ 合計所要時間: ${total}分</div>
+    </div>
+
+    <div class="sched-legend">
+      <span class="lg"><span class="sw gantt-prep"></span>準備(5分)</span>
+      <span class="lg"><span class="sw gantt-cook-l"></span>大鍋</span>
+      <span class="lg"><span class="sw gantt-cook-s"></span>小鍋</span>
+      <span class="lg"><span class="sw gantt-cook-g"></span>ガス</span>
+    </div>
+
+    <div class="seq">${eventsHTML}</div>
+  </details>`;
+}
+
+/* ==============================
+   レンダリング
+   ============================== */
+function render(){
+  renderMonthTabs();
+  renderWeekTabs();
+  renderDayMeals();
+  renderInventory();
+  renderQuickInput();
+  renderShopList();
+  renderRecipeList();
+}
+
+function renderMonthTabs(){
+  const el=document.getElementById('month-tabs');
+  el.innerHTML = [1,2,3,4].map(w=>
+    `<div class="month-tab ${STATE.currentWeek===w?'active':''}" data-w="${w}">${w}週目</div>`
+  ).join('');
+  el.querySelectorAll('.month-tab').forEach(t=>t.onclick=()=>{
+    STATE.currentWeek=+t.dataset.w;save();render();
+  });
+}
+
+function renderWeekTabs(){
+  const el=document.getElementById('week-tabs');
+  const week = STATE.plan['w'+STATE.currentWeek];
+  el.innerHTML = DAYS.map((d,i)=>{
+    const day = week[i];
+    const main=getRecipe(day.main),sub=getRecipe(day.sub),soup=getRecipe(day.soup);
+    const kcal=(main?.kcal||0)+(sub?.kcal||0)+(soup?.kcal||0);
+    const we = i>=5?'weekend':'';
+    const ac = STATE.currentDay===i?'active':'';
+    return `<div class="week-tab ${we} ${ac}" data-d="${i}"><div class="day">${d}</div><div class="kcal">${kcal}</div></div>`;
+  }).join('');
+  el.querySelectorAll('.week-tab').forEach(t=>t.onclick=()=>{
+    STATE.currentDay=+t.dataset.d;save();render();
+  });
+}
+
+function renderDayMeals(){
+  const el=document.getElementById('day-meals');
+  const day = STATE.plan['w'+STATE.currentWeek][STATE.currentDay];
+  const main=getRecipe(day.main),sub=getRecipe(day.sub),soup=getRecipe(day.soup);
+  const totalKcal=(main.kcal||0)+(sub.kcal||0)+(soup.kcal||0);
+  const totalP=(main.p||0)+(sub.p||0)+(soup.p||0);
+  const totalF=(main.f||0)+(sub.f||0)+(soup.f||0);
+  const totalC=(main.c||0)+(sub.c||0)+(soup.c||0);
+  const pSum=totalP*4,fSum=totalF*9,cSum=totalC*4,kSum=pSum+fSum+cSum||1;
+  const we = STATE.currentDay>=5?'weekend':'';
+
+  function toolTag(t){
+    if(t==='hc-l')return '<span class="tag tag-hc-l">🔥L</span>';
+    if(t==='hc-s')return '<span class="tag tag-hc-s">🔥S</span>';
+    return '<span class="tag tag-hc-s" style="background:#e5e7eb;color:#6b7280">🍳</span>';
+  }
+  function fbBtns(slot,cur){
+    const g = cur==='good'?'sel-good':'';
+    const b = cur==='bad'?'sel-bad':'';
+    return `<div class="fb-btns">
+      <button class="fb-btn ${g}" data-slot="${slot}" data-v="good">👍完食</button>
+      <button class="fb-btn ${b}" data-slot="${slot}" data-v="bad">🤔不評</button>
+    </div>`;
+  }
+
+  el.innerHTML = `
+  <div class="meal-card ${we}">
+    <div class="meal-head">
+      <span>${DAYS[STATE.currentDay]}曜日</span>
+      <span>🔥${totalKcal} kcal</span>
+    </div>
+    <div class="meal-body">
+      <div class="meal-row">
+        <div class="left">
+          <span class="tag tag-main">主菜</span>
+          ${toolTag(main.tool)}
+          <span class="meal-name">${main.emoji} ${main.name}</span>
+        </div>
+        <div class="meal-actions">
+          <button class="icon-btn" data-recipe="${main.id}">📖</button>
+          <button class="icon-btn" data-regen-slot="main">🔄</button>
+        </div>
+      </div>
+      <div class="meal-row">
+        <div class="left">
+          <span class="tag tag-sub">副菜</span>
+          ${toolTag(sub.tool)}
+          <span class="meal-name">${sub.emoji} ${sub.name}</span>
+        </div>
+        <div class="meal-actions">
+          <button class="icon-btn" data-recipe="${sub.id}">📖</button>
+          <button class="icon-btn" data-regen-slot="sub">🔄</button>
+        </div>
+      </div>
+      <div class="meal-row">
+        <div class="left">
+          <span class="tag tag-soup">汁物</span>
+          ${toolTag(soup.tool)}
+          <span class="meal-name">${soup.emoji} ${soup.name}</span>
+        </div>
+        <div class="meal-actions">
+          <button class="icon-btn" data-recipe="${soup.id}">📖</button>
+          <button class="icon-btn" data-regen-slot="soup">🔄</button>
+        </div>
+      </div>
+      <div class="bar">
+        <div class="seg bp" style="width:${(pSum/kSum*100).toFixed(0)}%"></div>
+        <div class="seg bf" style="width:${(fSum/kSum*100).toFixed(0)}%"></div>
+        <div class="seg bc" style="width:${(cSum/kSum*100).toFixed(0)}%"></div>
+      </div>
+      <div class="pfc">
+        <span class="p">P ${totalP}g</span>
+        <span class="f">F ${totalF}g</span>
+        <span class="c">C ${totalC}g</span>
+      </div>
+
+      ${renderSchedule(main,sub,soup)}
+
+      <div style="margin-top:12px;font-size:12px;color:var(--text-sub)">今日の献立はどうでしたか？</div>
+      <div class="fb-row"><span>主菜 ${main.emoji} ${main.name}</span>${fbBtns('main',day.feedback.main)}</div>
+      <div class="fb-row"><span>副菜 ${sub.emoji} ${sub.name}</span>${fbBtns('sub',day.feedback.sub)}</div>
+      <div class="fb-row"><span>汁物 ${soup.emoji} ${soup.name}</span>${fbBtns('soup',day.feedback.soup)}</div>
+
+      ${renderDayMemo(day)}
+    </div>
+  </div>`;
+
+  el.querySelectorAll('[data-recipe]').forEach(b=>b.onclick=()=>openRecipe(b.dataset.recipe));
+  el.querySelectorAll('[data-regen-slot]').forEach(b=>b.onclick=()=>{
+    const slot=b.dataset.regenSlot;
+    const pool = RECIPES.filter(r=>r.category===(slot==='main'?'main':slot==='sub'?'sub':'soup'));
+    day[slot] = pool[Math.floor(Math.random()*pool.length)].id;
+    save();render();
+  });
+  el.querySelectorAll('.fb-btn').forEach(b=>b.onclick=()=>{
+    day.feedback[b.dataset.slot] = b.dataset.v;
+    save();render();
+  });
+
+  // Day memo / extras events
+  const memoInp = el.querySelector('.memo-input');
+  if(memoInp){
+    memoInp.addEventListener('input',e=>{day.memo=e.target.value;save()});
+    memoInp.addEventListener('blur',()=>render());
+  }
+  el.querySelectorAll('.extra-chip .x').forEach(x=>x.onclick=e=>{
+    e.stopPropagation();
+    day.extras.splice(+x.dataset.i,1);save();render();
+  });
+  const addBtn = el.querySelector('.extra-add-btn');
+  if(addBtn){
+    const nInp = el.querySelector('.extra-add .n-inp');
+    const aInp = el.querySelector('.extra-add .a-inp');
+    const doAdd = ()=>{
+      const n = nInp.value.trim();
+      if(!n)return;
+      const a = aInp.value.trim()||'適量';
+      day.extras.push({n, a, c: guessCategory(n)});
+      nInp.value='';aInp.value='';save();render();
+      setTimeout(()=>el.querySelector('.extra-add .n-inp')?.focus(),50);
+    };
+    addBtn.onclick = doAdd;
+    nInp.addEventListener('keypress',e=>{if(e.key==='Enter')doAdd()});
+    aInp.addEventListener('keypress',e=>{if(e.key==='Enter')doAdd()});
+  }
+}
+
+function renderDayMemo(day){
+  day.memo = day.memo || '';
+  day.extras = day.extras || [];
+  const extras = day.extras;
+  return `
+  <div class="day-memo">
+    <div class="memo-head">
+      <span>📝 この日のメモ・追加食材</span>
+      ${extras.length?`<span class="cnt">+${extras.length}品</span>`:''}
+    </div>
+    <textarea class="memo-input" placeholder="例: 息子の誕生日、ケーキ用意／来客あり・取り分け多め">${day.memo.replace(/</g,'&lt;')}</textarea>
+
+    ${extras.length?`<div class="extras-list">
+      ${extras.map((e,i)=>`<span class="extra-chip">
+        <span class="cat-ic">${catIcon(e.c)}</span>
+        <span>${e.n}</span>
+        <span class="amt">${e.a}</span>
+        <span class="x" data-i="${i}">×</span>
+      </span>`).join('')}
+    </div>`:''}
+
+    <div class="extra-add">
+      <input class="n-inp" placeholder="食材名（例: ケーキ）">
+      <input class="a-inp" placeholder="量（任意）">
+      <button class="extra-add-btn">+ 追加</button>
+    </div>
+    <div class="memo-tip">💡 追加食材は買い物リストに日付タグ付きで表示されます</div>
+  </div>`;
+}
+
+/* ==============================
+   冷蔵庫
+   ============================== */
+function daysLeft(dateStr){
+  if(!dateStr)return null;
+  const d = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0,0,0,0);d.setHours(0,0,0,0);
+  return Math.round((d-today)/86400000);
+}
+
+function renderInventory(){
+  const el=document.getElementById('inv-list');
+  if(!STATE.inventory.length){
+    el.innerHTML='<div class="empty">まだ食材が登録されていません</div>';
+    return;
+  }
+  el.innerHTML = STATE.inventory.map((item,i)=>{
+    const dl = daysLeft(item.expire);
+    let cls='',label='';
+    if(dl!==null){
+      if(dl<=0){cls='expire-soon';label='今日中！'}
+      else if(dl<=3){cls='expire-warn';label=`あと${dl}日`}
+      else label=`あと${dl}日`;
+    }
+    return `<span class="chip ${cls}" data-i="${i}">
+      ${cls==='expire-soon'?'🔴':cls==='expire-warn'?'🟠':'🟢'}
+      <span class="ing-name">${item.name}</span>
+      ${label?`<span class="expire-label">${label}</span>`:''}
+      <span class="x" data-x="${i}">×</span>
+    </span>`;
+  }).join('');
+  el.querySelectorAll('.chip').forEach(c=>c.onclick=e=>{
+    if(e.target.classList.contains('x')){
+      STATE.inventory.splice(+e.target.dataset.x,1);save();render();
+    }else{
+      const i=+c.dataset.i;
+      const cur=STATE.inventory[i].expire||'';
+      const v=prompt(`${STATE.inventory[i].name} の消費期限 (YYYY-MM-DD、空で削除)`,cur);
+      if(v!==null){STATE.inventory[i].expire=v||null;save();render();}
+    }
+  });
+}
+
+function renderQuickInput(){
+  const cats=['お肉','魚介','卵・豆腐','野菜','調味料'];
+  const catMap={'お肉':'肉類','魚介':'魚介','卵・豆腐':'卵・豆腐','野菜':'野菜','調味料':'調味料'};
+  const catEl=document.getElementById('quick-cats');
+  catEl.innerHTML=cats.map(c=>`<div class="quick-cat ${STATE.quickCat===c?'active':''}" data-c="${c}">${c==='お肉'?'🥩':c==='魚介'?'🐟':c==='卵・豆腐'?'🥚':c==='野菜'?'🥬':'🧂'}${c}</div>`).join('');
+  catEl.querySelectorAll('.quick-cat').forEach(b=>b.onclick=()=>{
+    STATE.quickCat=b.dataset.c;renderQuickInput();
+  });
+  const itemEl=document.getElementById('quick-items');
+  const key=catMap[STATE.quickCat];
+  const items=QUICK_INGREDIENTS[key]||[];
+  const invNames=STATE.inventory.map(i=>i.name);
+  itemEl.innerHTML=items.map(name=>{
+    const has=invNames.includes(name);
+    return `<div class="quick-item ${has?'in-stock':''}" data-n="${name}">${has?'✓':'+'} ${name}</div>`;
+  }).join('');
+  itemEl.querySelectorAll('.quick-item').forEach(b=>b.onclick=()=>{
+    const n=b.dataset.n;
+    const idx=STATE.inventory.findIndex(i=>i.name===n);
+    if(idx>=0)STATE.inventory.splice(idx,1);
+    else STATE.inventory.push({name:n,expire:null,addedAt:new Date().toISOString()});
+    save();render();
+  });
+}
+
+document.getElementById('inv-add').onclick=()=>{
+  const inp=document.getElementById('inv-input');
+  const v=inp.value.trim();if(!v)return;
+  v.split(/[、,]/).map(s=>s.trim()).filter(Boolean).forEach(name=>{
+    if(!STATE.inventory.some(i=>i.name===name))
+      STATE.inventory.push({name,expire:null,addedAt:new Date().toISOString()});
+  });
+  inp.value='';save();render();
+};
+document.getElementById('inv-input').addEventListener('keypress',e=>{
+  if(e.key==='Enter')document.getElementById('inv-add').click();
+});
+
+/* ==============================
+   買い物リスト
+   ============================== */
+function renderShopList(){
+  const el=document.getElementById('shop-list');
+  const week=STATE.plan['w'+STATE.currentWeek];
+  const tally={}; // レシピ由来の食材集計
+  const extrasByCat={}; // 日付タグ付きの追加食材
+  week.forEach((day,di)=>{
+    [day.main,day.sub,day.soup].forEach(id=>{
+      const r=getRecipe(id);
+      r.ingredients.forEach(ing=>{
+        const key=ing.n;
+        if(!tally[key])tally[key]={n:ing.n,amounts:[],c:ing.c};
+        tally[key].amounts.push(ing.a);
+      });
+    });
+    (day.extras||[]).forEach(ex=>{
+      const cat = ex.c || guessCategory(ex.n);
+      if(!extrasByCat[cat])extrasByCat[cat]=[];
+      extrasByCat[cat].push({n:ex.n, a:ex.a, day:DAYS[di]});
+    });
+  });
+  const invNames=STATE.inventory.map(i=>i.name);
+  const byCat={};
+  Object.values(tally).forEach(item=>{
+    if(!byCat[item.c])byCat[item.c]=[];
+    byCat[item.c].push(item);
+  });
+  const order=['野菜','肉類','魚介','卵・豆腐','乳製品','調味料','その他'];
+  const allCats = new Set([...order, ...Object.keys(byCat), ...Object.keys(extrasByCat)]);
+  const orderedCats = order.filter(c=>allCats.has(c) && (byCat[c]||extrasByCat[c]));
+
+  const hasAnyExtra = Object.keys(extrasByCat).length>0;
+
+  el.innerHTML = orderedCats.map(c=>{
+    const normalItems = (byCat[c]||[]).map(item=>{
+      const have=invNames.some(n=>item.n.includes(n)||n.includes(item.n));
+      return `<div class="shop-item ${have?'have':''}">
+        <span>${have?'✓ ':''}${item.n}</span>
+        <span class="amt">${[...new Set(item.amounts)].join(', ')}</span>
+      </div>`;
+    }).join('');
+    const extraItems = (extrasByCat[c]||[]).map(item=>{
+      return `<div class="shop-item extra-item">
+        <span><span class="day-badge">${item.day}</span>${item.n}</span>
+        <span class="amt">${item.a}</span>
+      </div>`;
+    }).join('');
+    return `
+    <div class="shop-cat">
+      <h3>${catIcon(c)} ${c}</h3>
+      ${normalItems}
+      ${extraItems?`<div class="shop-section-title">⭐ 特別食材（日付指定）</div>${extraItems}`:''}
+    </div>`;
+  }).join('') || '<div class="empty">献立がありません</div>';
+
+  if(hasAnyExtra){
+    el.innerHTML = `<div class="note" style="margin-bottom:10px;background:var(--o-light);padding:8px 10px;border-radius:8px;color:#78350f">⭐ 特別食材: ${Object.values(extrasByCat).flat().length}品（日付タグ付き）</div>` + el.innerHTML;
+  }
+}
+
+function buildShopText(){
+  const week=STATE.plan['w'+STATE.currentWeek];
+  const tally={};
+  const extras=[];
+  week.forEach((day,di)=>{
+    [day.main,day.sub,day.soup].forEach(id=>{
+      const r=getRecipe(id);
+      r.ingredients.forEach(ing=>{
+        if(!tally[ing.n])tally[ing.n]=[];
+        tally[ing.n].push(ing.a);
+      });
+    });
+    (day.extras||[]).forEach(ex=>extras.push({...ex,day:DAYS[di]}));
+  });
+  const invNames=STATE.inventory.map(i=>i.name);
+  let text=`🛒 ${STATE.currentWeek}週目の買い物リスト\n\n【通常食材】\n`+
+    Object.entries(tally).filter(([n])=>!invNames.some(x=>n.includes(x)||x.includes(n)))
+      .map(([n,a])=>`□ ${n} (${[...new Set(a)].join(', ')})`).join('\n');
+  if(extras.length){
+    text += `\n\n【⭐ 特別食材（日付指定）】\n` +
+      extras.map(e=>`□ [${e.day}] ${e.n} (${e.a})`).join('\n');
+  }
+  const memos = week.map((d,i)=>d.memo?`・${DAYS[i]}: ${d.memo}`:null).filter(Boolean);
+  if(memos.length){
+    text += `\n\n【📝 日ごとのメモ】\n` + memos.join('\n');
+  }
+  return text;
+}
+
+document.getElementById('btn-copy-shop').onclick=()=>{
+  navigator.clipboard.writeText(buildShopText()).then(()=>alert('コピーしました！'));
+};
+
+document.getElementById('btn-share-shop').onclick=async()=>{
+  const text = buildShopText();
+  if(navigator.share){
+    try{
+      await navigator.share({title:'買い物リスト', text});
+    }catch(e){/* canceled */}
+  }else{
+    navigator.clipboard.writeText(text).then(()=>alert('共有機能が使えないためコピーしました。LINE等に貼り付けてください。'));
+  }
+};
+
+// Service Worker登録（PWA/オフライン対応）
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+
+/* ==============================
+   レシピ一覧
+   ============================== */
+function renderRecipeList(){
+  const filters=[
+    {k:'all',l:'すべて'},
+    {k:'main',l:'🍖主菜'},
+    {k:'sub',l:'🥗副菜'},
+    {k:'soup',l:'🍲汁物'},
+    {k:'hc',l:'🔥ホットクック'},
+    {k:'stove',l:'🍳ガス'},
+    {k:'kid',l:'👶子ども好き'}
+  ];
+  const fEl=document.getElementById('filter-row');
+  fEl.innerHTML=filters.map(f=>`<div class="fchip ${STATE.filter===f.k?'active':''}" data-f="${f.k}">${f.l}</div>`).join('');
+  fEl.querySelectorAll('.fchip').forEach(c=>c.onclick=()=>{
+    STATE.filter=c.dataset.f;renderRecipeList();
+  });
+  const filtered=RECIPES.filter(r=>{
+    if(STATE.filter==='all')return true;
+    if(STATE.filter==='hc')return r.tool==='hc-l'||r.tool==='hc-s';
+    if(STATE.filter==='stove')return r.tool==='stove';
+    if(STATE.filter==='kid')return r.tags.includes('子ども好き');
+    return r.category===STATE.filter;
+  });
+  const gEl=document.getElementById('recipe-grid');
+  gEl.innerHTML=filtered.map(r=>`
+    <div class="recipe-tile" data-id="${r.id}">
+      <span class="rt-emoji">${r.emoji}</span>
+      <div class="rt-name">${r.name}</div>
+      <div class="rt-tags">${r.tool==='hc-l'?'🔥L':r.tool==='hc-s'?'🔥S':'🍳'} ${r.time}分</div>
+    </div>
+  `).join('');
+  gEl.querySelectorAll('.recipe-tile').forEach(t=>t.onclick=()=>openRecipe(t.dataset.id));
+}
+
+/* ==============================
+   レシピモーダル
+   ============================== */
+function openRecipe(id){
+  const r=getRecipe(id);
+  const m=document.getElementById('modal');
+  const toolLabel=r.tool==='hc-l'?'🔥ホットクック大':r.tool==='hc-s'?'🔥ホットクック小':'🍳ガス調理';
+  m.innerHTML=`
+    <div class="recipe-hero">
+      <span class="emoji">${r.emoji}</span>
+      <h3>${r.name}</h3>
+      <div class="recipe-meta">
+        <span class="mtag">⏱ ${r.time}分</span>
+        <span class="mtag">${r.cuisine}</span>
+        <span class="mtag">${toolLabel}</span>
+        <span class="mtag">🔥${r.kcal} kcal</span>
+      </div>
+    </div>
+    <div class="modal-head" style="position:absolute;top:12px;right:12px">
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+
+    ${r.kidTip?`<div class="callout callout-kid">
+      <div class="callout-title">👶 子ども向けポイント</div>
+      <div class="callout-body">${r.kidTip}</div>
+    </div>`:''}
+    ${r.hide?`<div class="callout callout-veg">
+      <div class="callout-title">🥦 野菜の隠し方</div>
+      <div class="callout-body">${r.hide}</div>
+    </div>`:''}
+    ${r.hcMode?`<div class="callout callout-hc">
+      <div class="callout-title">🔥 ホットクック設定</div>
+      <div class="callout-body">${r.hcMode}</div>
+    </div>`:''}
+
+    <div class="section">
+      <h4>🛒 材料（3〜4人前）</h4>
+      <div class="ing-list">
+        ${r.ingredients.map(i=>`<div class="ing-item"><span class="n">${i.n}</span><span class="a">${i.a}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="section">
+      <h4>📋 作り方</h4>
+      ${r.steps.map((s,i)=>`<div class="step"><div class="step-num">${i+1}</div><div class="step-body">${s}</div></div>`).join('')}
+    </div>
+
+    <div class="note">📚 参考: ${r.source}</div>
+  `;
+  document.getElementById('modal-bg').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modal-bg').classList.remove('show');
+}
+document.getElementById('modal-bg').onclick=e=>{
+  if(e.target.id==='modal-bg')closeModal();
+};
+
+/* ==============================
+   ナビゲーション
+   ============================== */
+document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('view-'+b.dataset.view).classList.add('active');
+});
+
+document.getElementById('btn-regen').onclick=()=>{
+  if(confirm('今週の献立を作り直しますか？'))
+    {generatePlan();render();}
+};
+document.getElementById('btn-3days').onclick=()=>{
+  if(confirm('冷蔵庫の食材を優先して月〜水の3日分を作成します。よろしいですか？'))
+    {generateThreeDays();STATE.currentDay=0;save();render();}
+};
+
+/* ==============================
+   初期化
+   ============================== */
+if(!STATE.plan)generatePlan();
+render();
+</script>
+</body>
+</html>
