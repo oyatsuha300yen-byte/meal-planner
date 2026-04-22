@@ -50,8 +50,21 @@ main{padding:12px}
 .week-tab.active{background:var(--g);color:#fff;border-color:var(--g)}
 .week-tab.weekend{background:var(--o-light);color:var(--o)}
 .week-tab.weekend.active{background:var(--o);color:#fff;border-color:var(--o)}
+.week-tab .date{font-size:10px;opacity:.8;line-height:1;margin-bottom:2px}
 .week-tab .day{font-size:14px;font-weight:700}
 .week-tab .kcal{font-size:10px;opacity:.85;margin-top:2px}
+.week-tab.today{box-shadow:0 0 0 2px #ef4444,inset 0 0 0 2px #fff}
+.week-tab.today::after{content:"今日";position:absolute;top:-6px;right:-4px;background:#ef4444;color:#fff;font-size:8px;padding:1px 4px;border-radius:6px;font-weight:700;line-height:1.3}
+.week-tab{position:relative}
+
+.today-banner{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(239,68,68,.25)}
+.today-banner .tb-l{display:flex;align-items:center;gap:8px}
+.today-banner .tb-date{font-size:18px;font-weight:800;line-height:1}
+.today-banner .tb-sub{font-size:11px;opacity:.9;margin-top:2px}
+.today-banner .tb-jump{background:rgba(255,255,255,.22);padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;color:#fff}
+.today-banner .tb-jump:active{background:rgba(255,255,255,.4)}
+
+.month-tab .mt-range{font-size:9px;opacity:.75;margin-top:2px;line-height:1}
 
 /* Month tabs */
 .month-tabs{display:flex;gap:6px;margin-bottom:12px}
@@ -265,6 +278,7 @@ details.sim[open] summary{margin-bottom:8px}
   <!-- 週の献立 -->
   <section class="view active" id="view-plan">
     <div class="card">
+      <div id="today-banner-slot"></div>
       <div class="month-tabs" id="month-tabs"></div>
       <div class="week-tabs" id="week-tabs"></div>
       <div id="day-meals"></div>
@@ -943,6 +957,47 @@ const DAYS = ['月','火','水','木','金','土','日'];
 const DAY_KEY = ['mon','tue','wed','thu','fri','sat','sun'];
 const TODAY = new Date();
 
+// 今週の月曜日（週の起点）を返す
+function getThisMonday(){
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  const dow = d.getDay(); // 0=日, 1=月, ... 6=土
+  const diff = dow === 0 ? -6 : 1 - dow;
+  d.setDate(d.getDate()+diff);
+  return d;
+}
+function getPlanStart(){
+  const stored = store.get('planStartDate',null);
+  if(stored){
+    const d = new Date(stored);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+  const m = getThisMonday();
+  store.set('planStartDate', m.toISOString());
+  return m;
+}
+function getDayDate(weekIdx, dayIdx){
+  const start = getPlanStart();
+  const d = new Date(start);
+  d.setDate(d.getDate() + (weekIdx-1)*7 + dayIdx);
+  return d;
+}
+function fmtDate(d){ return `${d.getMonth()+1}/${d.getDate()}`; }
+function isSameDate(a,b){
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+function isToday(d){ return isSameDate(d, new Date()); }
+function findTodayIndex(){
+  const today = new Date();
+  for(let w=1;w<=4;w++){
+    for(let d=0;d<7;d++){
+      if(isSameDate(getDayDate(w,d), today)) return {w,d};
+    }
+  }
+  return null;
+}
+
 const store = {
   get(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch{return def}},
   set(k,v){localStorage.setItem(k,JSON.stringify(v))}
@@ -1291,6 +1346,7 @@ function renderSchedule(main, sub, soup){
    レンダリング
    ============================== */
 function render(){
+  renderTodayBanner();
   renderMonthTabs();
   renderWeekTabs();
   renderDayMeals();
@@ -1300,11 +1356,44 @@ function render(){
   renderRecipeList();
 }
 
+function renderTodayBanner(){
+  const el = document.getElementById('today-banner-slot');
+  const today = new Date();
+  const youbi = ['日','月','火','水','木','金','土'][today.getDay()];
+  const todayPos = findTodayIndex();
+  const viewing = (STATE.currentWeek===todayPos?.w && STATE.currentDay===todayPos?.d);
+  const jumpBtn = (todayPos && !viewing)
+    ? `<button class="tb-jump" id="btn-jump-today">今日へジャンプ →</button>`
+    : (viewing ? `<span class="tb-jump" style="background:rgba(255,255,255,.4)">✓ 表示中</span>` : `<span class="tb-jump" style="opacity:.6">範囲外</span>`);
+  el.innerHTML = `
+    <div class="today-banner">
+      <div class="tb-l">
+        <div>
+          <div class="tb-date">📅 ${today.getMonth()+1}月${today.getDate()}日 (${youbi})</div>
+          <div class="tb-sub">${today.getFullYear()}年</div>
+        </div>
+      </div>
+      ${jumpBtn}
+    </div>`;
+  const jb = document.getElementById('btn-jump-today');
+  if(jb) jb.onclick = ()=>{
+    STATE.currentWeek = todayPos.w;
+    STATE.currentDay = todayPos.d;
+    save();render();
+  };
+}
+
 function renderMonthTabs(){
   const el=document.getElementById('month-tabs');
-  el.innerHTML = [1,2,3,4].map(w=>
-    `<div class="month-tab ${STATE.currentWeek===w?'active':''}" data-w="${w}">${w}週目</div>`
-  ).join('');
+  el.innerHTML = [1,2,3,4].map(w=>{
+    const start = getDayDate(w,0);
+    const end = getDayDate(w,6);
+    const range = `${fmtDate(start)}〜${fmtDate(end)}`;
+    return `<div class="month-tab ${STATE.currentWeek===w?'active':''}" data-w="${w}">
+      ${w}週目
+      <div class="mt-range">${range}</div>
+    </div>`;
+  }).join('');
   el.querySelectorAll('.month-tab').forEach(t=>t.onclick=()=>{
     STATE.currentWeek=+t.dataset.w;save();render();
   });
@@ -1317,9 +1406,15 @@ function renderWeekTabs(){
     const day = week[i];
     const main=getRecipe(day.main),sub=getRecipe(day.sub),soup=getRecipe(day.soup);
     const kcal=(main?.kcal||0)+(sub?.kcal||0)+(soup?.kcal||0);
+    const date = getDayDate(STATE.currentWeek,i);
     const we = i>=5?'weekend':'';
     const ac = STATE.currentDay===i?'active':'';
-    return `<div class="week-tab ${we} ${ac}" data-d="${i}"><div class="day">${d}</div><div class="kcal">${kcal}</div></div>`;
+    const td = isToday(date)?'today':'';
+    return `<div class="week-tab ${we} ${ac} ${td}" data-d="${i}">
+      <div class="date">${fmtDate(date)}</div>
+      <div class="day">${d}</div>
+      <div class="kcal">${kcal}</div>
+    </div>`;
   }).join('');
   el.querySelectorAll('.week-tab').forEach(t=>t.onclick=()=>{
     STATE.currentDay=+t.dataset.d;save();render();
@@ -1795,6 +1890,11 @@ document.getElementById('btn-3days').onclick=()=>{
    初期化
    ============================== */
 if(!STATE.plan)generatePlan();
+if(!store.get('jumpedToToday',false)){
+  const tp = findTodayIndex();
+  if(tp){ STATE.currentWeek = tp.w; STATE.currentDay = tp.d; save(); }
+  store.set('jumpedToToday', true);
+}
 render();
 </script>
 </body>
