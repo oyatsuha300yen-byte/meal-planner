@@ -1889,7 +1889,27 @@ document.getElementById('btn-3days').onclick=()=>{
 /* ==============================
    初期化
    ============================== */
-if(!STATE.plan)generatePlan();
+if(!store.get('seed_2026_04_23',false)){
+  const seed = [
+    'きゅうり','きゅうり','レタス','豆腐',
+    'ごぼう','もやし','玉ねぎ','じゃがいも','にんじん','キャベツ','白ネギ','小松菜','えのき',
+    '豚肉','合いびき肉','冷凍鮭',
+    '牛乳','バター','納豆','しらす'
+  ];
+  const now = new Date().toISOString();
+  seed.forEach(n=>{
+    if(!STATE.inventory.some(x=>x.name===n)){
+      STATE.inventory.push({name:n, expire:null, addedAt:now});
+    }
+  });
+  store.set('inventory', STATE.inventory);
+  store.set('seed_2026_04_23', true);
+  STATE.plan = null;
+}
+if(!STATE.plan){
+  if(typeof generateThreeDays==='function'){ generateThreeDays(); }
+  else { generatePlan(); }
+}
 if(!store.get('jumpedToToday',false)){
   const tp = findTodayIndex();
   if(tp){ STATE.currentWeek = tp.w; STATE.currentDay = tp.d; save(); }
