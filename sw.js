@@ -1,4 +1,4 @@
-const CACHE = 'kondate-v18';
+const CACHE = 'kondate-v19';
 const ASSETS = [
   './',
   './index.html',

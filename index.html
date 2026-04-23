@@ -292,6 +292,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v19</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材優先で月〜水の3日分を作成">🎯 在庫で3日</button>
@@ -2115,6 +2116,14 @@ if(!store.get('seed_2026_04_23_v6',false)){
   store.set('seed_2026_04_23_v6', true);
 }
 if(!STATE.plan) generatePlan();
+// バター復活（誤削除対応・1回のみ）
+if(!store.get('restore_butter_v1',false)){
+  if(!STATE.inventory.some(x=>x.name==='バター')){
+    STATE.inventory.push({name:'バター', category:'乳製品', qty:200, unit:'g', step:10, refill:false, addedAt:new Date().toISOString()});
+    store.set('inventory', STATE.inventory);
+  }
+  store.set('restore_butter_v1', true);
+}
 if(!store.get('jumpedToToday',false)){
   const tp = findTodayIndex();
   if(tp){ STATE.currentWeek = tp.w; STATE.currentDay = tp.d; save(); }
