@@ -117,6 +117,20 @@ main{padding:12px}
 .quick-item{padding:5px 10px;border-radius:20px;background:#fff;font-size:12px;border:1px solid var(--r-light);color:var(--r)}
 .quick-item.in-stock{background:var(--g-light);color:var(--g2);border-color:var(--g)}
 
+/* 在庫ステータス（traffic light）UI */
+.status-legend{font-size:12px;display:flex;gap:12px;align-items:center;margin-bottom:10px;color:#6b7280;flex-wrap:wrap;padding:8px 10px;background:var(--g-bg);border-radius:8px}
+.loc-group{margin-bottom:14px;background:#fff;border-radius:10px;padding:10px;border:1px solid var(--gray-border)}
+.loc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.loc-head h3{margin:0;font-size:15px}
+.loc-add{background:transparent;border:1px solid var(--gray-border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--g2)}
+.loc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.loc-empty{color:#9ca3af;font-size:13px;padding:4px}
+.status-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:18px;font-size:13px;cursor:pointer;user-select:none;border:1px solid transparent}
+.status-have{background:#d1fae5;color:#065f46}
+.status-low{background:#fef3c7;color:#92400e}
+.status-none{background:#fee2e2;color:#991b1b;text-decoration:line-through;opacity:.7}
+.status-chip .x{margin-left:4px;opacity:.5;padding:0 2px;cursor:pointer}
+
 /* Bottom nav */
 nav.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--gray-border);display:flex;padding:6px 4px 10px;z-index:20}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;color:var(--gray);font-size:10px;font-weight:600}
@@ -289,18 +303,12 @@ details.sim[open] summary{margin-bottom:8px}
   <!-- 冷蔵庫 -->
   <section class="view" id="view-fridge">
     <div class="card">
-      <h2>🛒 冷蔵庫の食材</h2>
+      <h2>🥬 食材在庫チェック</h2>
       <div class="input-row">
-        <input id="inv-input" placeholder="例: 鶏もも肉、卵、キャベツ">
+        <input id="inv-input" placeholder="例: キャベツ、卵（場所は自動判定）">
         <button id="inv-add">追加</button>
       </div>
-      <div class="quick-input">
-        <div class="quick-head">⚡ よく使う食材からクイック入力</div>
-        <div class="quick-cats" id="quick-cats"></div>
-        <div class="quick-items" id="quick-items"></div>
-      </div>
-      <div id="inv-list" class="chip-group"></div>
-      <div class="note" style="margin-top:8px">💡 タップで賞味期限を編集／×で削除</div>
+      <div id="inv-list"></div>
     </div>
   </section>
 
@@ -1048,7 +1056,7 @@ function invMatchCount(recipe,inv){
 }
 
 function generatePlan(opts={}){
-  const inv = STATE.inventory.map(i=>i.name);
+  const inv = invHaveNames();
   const available = RECIPES.filter(r=>!isExcluded(r));
   const mains = available.filter(r=>r.category==='main');
   const subs  = available.filter(r=>r.category==='sub');
@@ -1105,7 +1113,7 @@ function generatePlan(opts={}){
 
 // 在庫で3日分だけ生成（現在週の月〜水を上書き、残りは既存のまま）
 function generateThreeDays(){
-  const inv = STATE.inventory.map(i=>i.name);
+  const inv = invHaveNames();
   if(inv.length===0){
     alert('冷蔵庫タブで食材を登録してから実行してください');
     return;
@@ -1603,70 +1611,92 @@ function daysLeft(dateStr){
   return Math.round((d-today)/86400000);
 }
 
-function renderInventory(){
-  const el=document.getElementById('inv-list');
-  if(!STATE.inventory.length){
-    el.innerHTML='<div class="empty">まだ食材が登録されていません</div>';
-    return;
-  }
-  el.innerHTML = STATE.inventory.map((item,i)=>{
-    const dl = daysLeft(item.expire);
-    let cls='',label='';
-    if(dl!==null){
-      if(dl<=0){cls='expire-soon';label='今日中！'}
-      else if(dl<=3){cls='expire-warn';label=`あと${dl}日`}
-      else label=`あと${dl}日`;
-    }
-    return `<span class="chip ${cls}" data-i="${i}">
-      ${cls==='expire-soon'?'🔴':cls==='expire-warn'?'🟠':'🟢'}
-      <span class="ing-name">${item.name}</span>
-      ${label?`<span class="expire-label">${label}</span>`:''}
-      <span class="x" data-x="${i}">×</span>
-    </span>`;
-  }).join('');
-  el.querySelectorAll('.chip').forEach(c=>c.onclick=e=>{
-    if(e.target.classList.contains('x')){
-      STATE.inventory.splice(+e.target.dataset.x,1);save();render();
-    }else{
-      const i=+c.dataset.i;
-      const cur=STATE.inventory[i].expire||'';
-      const v=prompt(`${STATE.inventory[i].name} の消費期限 (YYYY-MM-DD、空で削除)`,cur);
-      if(v!==null){STATE.inventory[i].expire=v||null;save();render();}
-    }
+/* 在庫: 保管場所 + 3段階ステータス */
+const STORAGE_LOCATIONS = ['冷蔵庫','冷凍庫','常温','調味料'];
+const STORAGE_ICONS = {'冷蔵庫':'🧊','冷凍庫':'❄️','常温':'🥫','調味料':'🧂'};
+const STATUS_ICONS = {'have':'🟢','low':'🟡','none':'🔴'};
+
+function inferLocation(name){
+  const seasoning = ['醤油','味噌','みりん','砂糖','塩','酢','ケチャップ','マヨネーズ','だし','油','こしょう','カレー粉','オイスター','片栗粉','コンソメ'];
+  const freezer = ['冷凍'];
+  const room = ['玉ねぎ','じゃがいも','にんじん','ごぼう','キャベツ','白ネギ','長ねぎ','もやし','えのき','タケノコ','たけのこ','米','かぼちゃ','さつまいも','春雨','パスタ','うどん','そば','缶','乾燥'];
+  if(seasoning.some(s=>name.includes(s))) return '調味料';
+  if(freezer.some(s=>name.includes(s))) return '冷凍庫';
+  if(room.some(s=>name.includes(s))) return '常温';
+  return '冷蔵庫';
+}
+function normalizeInv(){
+  STATE.inventory.forEach(it=>{
+    if(!it.location) it.location = inferLocation(it.name);
+    if(!it.status) it.status = 'have';
   });
 }
+function invHaveNames(){
+  normalizeInv();
+  return STATE.inventory.filter(i=>i.status==='have').map(i=>i.name);
+}
 
-function renderQuickInput(){
-  const cats=['お肉','魚介','卵・豆腐','野菜','調味料'];
-  const catMap={'お肉':'肉類','魚介':'魚介','卵・豆腐':'卵・豆腐','野菜':'野菜','調味料':'調味料'};
-  const catEl=document.getElementById('quick-cats');
-  catEl.innerHTML=cats.map(c=>`<div class="quick-cat ${STATE.quickCat===c?'active':''}" data-c="${c}">${c==='お肉'?'🥩':c==='魚介'?'🐟':c==='卵・豆腐'?'🥚':c==='野菜'?'🥬':'🧂'}${c}</div>`).join('');
-  catEl.querySelectorAll('.quick-cat').forEach(b=>b.onclick=()=>{
-    STATE.quickCat=b.dataset.c;renderQuickInput();
+function renderInventory(){
+  normalizeInv();
+  const el=document.getElementById('inv-list');
+  const grouped={};
+  STORAGE_LOCATIONS.forEach(loc=>grouped[loc]=[]);
+  STATE.inventory.forEach((it,i)=>{
+    const loc = STORAGE_LOCATIONS.includes(it.location) ? it.location : '冷蔵庫';
+    grouped[loc].push({it,i});
   });
-  const itemEl=document.getElementById('quick-items');
-  const key=catMap[STATE.quickCat];
-  const items=QUICK_INGREDIENTS[key]||[];
-  const invNames=STATE.inventory.map(i=>i.name);
-  itemEl.innerHTML=items.map(name=>{
-    const has=invNames.includes(name);
-    return `<div class="quick-item ${has?'in-stock':''}" data-n="${name}">${has?'✓':'+'} ${name}</div>`;
-  }).join('');
-  itemEl.querySelectorAll('.quick-item').forEach(b=>b.onclick=()=>{
-    const n=b.dataset.n;
-    const idx=STATE.inventory.findIndex(i=>i.name===n);
-    if(idx>=0)STATE.inventory.splice(idx,1);
-    else STATE.inventory.push({name:n,expire:null,addedAt:new Date().toISOString()});
+  el.innerHTML = `
+    <div class="status-legend">
+      <span>🟢 ある</span><span>🟡 少ない</span><span>🔴 ない</span>
+      <span style="margin-left:auto;font-size:11px">タップで切替</span>
+    </div>
+    ${STORAGE_LOCATIONS.map(loc=>`
+      <div class="loc-group">
+        <div class="loc-head">
+          <h3>${STORAGE_ICONS[loc]} ${loc}</h3>
+          <button class="loc-add" data-loc="${loc}">＋追加</button>
+        </div>
+        <div class="loc-chips">
+          ${grouped[loc].length===0
+            ? '<div class="loc-empty">登録なし</div>'
+            : grouped[loc].map(({it,i})=>`
+                <span class="status-chip status-${it.status}" data-i="${i}">
+                  ${STATUS_ICONS[it.status]} <span>${it.name}</span>
+                  <span class="x" data-x="${i}">×</span>
+                </span>`).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+  el.querySelectorAll('.status-chip').forEach(c=>c.onclick=e=>{
+    if(e.target.classList.contains('x')){
+      STATE.inventory.splice(+e.target.dataset.x,1);save();render();return;
+    }
+    const i=+c.dataset.i;
+    const cur=STATE.inventory[i].status;
+    STATE.inventory[i].status = cur==='have'?'low':cur==='low'?'none':'have';
+    save();render();
+  });
+  el.querySelectorAll('.loc-add').forEach(b=>b.onclick=()=>{
+    const loc=b.dataset.loc;
+    const v=prompt(`${loc}に追加（カンマ区切り可）`);
+    if(!v)return;
+    v.split(/[、,]/).map(s=>s.trim()).filter(Boolean).forEach(name=>{
+      if(!STATE.inventory.some(i=>i.name===name))
+        STATE.inventory.push({name,location:loc,status:'have',addedAt:new Date().toISOString()});
+    });
     save();render();
   });
 }
+
+function renderQuickInput(){ /* 旧クイック入力は廃止（在庫タブを場所別に再構築済み） */ }
 
 document.getElementById('inv-add').onclick=()=>{
   const inp=document.getElementById('inv-input');
   const v=inp.value.trim();if(!v)return;
   v.split(/[、,]/).map(s=>s.trim()).filter(Boolean).forEach(name=>{
     if(!STATE.inventory.some(i=>i.name===name))
-      STATE.inventory.push({name,expire:null,addedAt:new Date().toISOString()});
+      STATE.inventory.push({name,location:inferLocation(name),status:'have',addedAt:new Date().toISOString()});
   });
   inp.value='';save();render();
 };
@@ -1697,7 +1727,7 @@ function renderShopList(){
       extrasByCat[cat].push({n:ex.n, a:ex.a, day:DAYS[di]});
     });
   });
-  const invNames=STATE.inventory.map(i=>i.name);
+  const invNames=invHaveNames();
   const byCat={};
   Object.values(tally).forEach(item=>{
     if(!byCat[item.c])byCat[item.c]=[];
@@ -1750,7 +1780,7 @@ function buildShopText(){
     });
     (day.extras||[]).forEach(ex=>extras.push({...ex,day:DAYS[di]}));
   });
-  const invNames=STATE.inventory.map(i=>i.name);
+  const invNames=invHaveNames();
   let text=`🛒 ${STATE.currentWeek}週目の買い物リスト\n\n【通常食材】\n`+
     Object.entries(tally).filter(([n])=>!invNames.some(x=>n.includes(x)||x.includes(n)))
       .map(([n,a])=>`□ ${n} (${[...new Set(a)].join(', ')})`).join('\n');
@@ -1903,17 +1933,23 @@ document.getElementById('btn-3days').onclick=()=>{
 /* ==============================
    初期化
    ============================== */
-if(!store.get('seed_2026_04_23_v5',false)){
+if(!store.get('seed_2026_04_23_v6',false)){
+  // 既存アイテムを場所＋ステータス形式に移行
+  STATE.inventory.forEach(it=>{
+    if(!it.location) it.location = inferLocation(it.name);
+    if(!it.status) it.status = 'have';
+  });
   const seed = [
-    'きゅうり','きゅうり','レタス','豆腐','タケノコ',
+    'きゅうり','レタス','豆腐','タケノコ',
     'ごぼう','もやし','玉ねぎ','じゃがいも','にんじん','キャベツ','白ネギ','小松菜','えのき',
     '豚肉','合いびき肉','冷凍鮭',
-    '牛乳','バター','納豆','しらす'
+    '牛乳','バター','納豆','しらす',
+    '醤油','味噌','みりん','砂糖','塩'
   ];
   const now = new Date().toISOString();
   seed.forEach(n=>{
     if(!STATE.inventory.some(x=>x.name===n)){
-      STATE.inventory.push({name:n, expire:null, addedAt:now});
+      STATE.inventory.push({name:n, location:inferLocation(n), status:'have', addedAt:now});
     }
   });
   store.set('inventory', STATE.inventory);
@@ -1930,7 +1966,7 @@ if(!store.get('seed_2026_04_23_v5',false)){
   ];
   STATE.plan['w1'] = curated.map(c=>({...c, feedback:{}, memo:'', extras:[]}));
   save();
-  store.set('seed_2026_04_23_v5', true);
+  store.set('seed_2026_04_23_v6', true);
 }
 if(!STATE.plan) generatePlan();
 if(!store.get('jumpedToToday',false)){
