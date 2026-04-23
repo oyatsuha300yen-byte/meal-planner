@@ -310,7 +310,7 @@ details.sim[open] summary{margin-bottom:8px}
       <div class="week-tabs" id="week-tabs"></div>
       <div id="day-meals"></div>
     </div>
-    <div class="note">📌 主菜はホットクック大🔥L、副菜/汁物はホットクック小🔥S、ガス調理は🍳で表示。同時並行で時短。</div>
+    <div class="note">📌 主菜はホットクック大🍲L、副菜/汁物はホットクック小🍲S、ガス調理は🍳で表示。同時並行で時短。</div>
   </section>
 
   <!-- 冷蔵庫 -->
@@ -1964,7 +1964,7 @@ function renderRecipeList(){
     {k:'main',l:'🍖主菜'},
     {k:'sub',l:'🥗副菜'},
     {k:'soup',l:'🍲汁物'},
-    {k:'hc',l:'🔥ホットクック'},
+    {k:'hc',l:'🍲ホットクック'},
     {k:'stove',l:'🍳ガス'},
     {k:'kid',l:'👶子ども好き'}
   ];
@@ -1997,7 +1997,7 @@ function renderRecipeList(){
 function openRecipe(id){
   const r=getRecipe(id);
   const m=document.getElementById('modal');
-  const toolLabel=r.tool==='hc-l'?'🔥ホットクック大':r.tool==='hc-s'?'🔥ホットクック小':'🍳ガス調理';
+  const toolLabel=r.tool==='hc-l'?'🍲ホットクック大':r.tool==='hc-s'?'🍲ホットクック小':'🍳ガス調理';
   m.innerHTML=`
     <div class="recipe-hero">
       <span class="emoji">${r.emoji}</span>
@@ -2022,7 +2022,7 @@ function openRecipe(id){
       <div class="callout-body">${r.hide}</div>
     </div>`:''}
     ${r.hcMode?`<div class="callout callout-hc">
-      <div class="callout-title">🔥 ホットクック設定</div>
+      <div class="callout-title">🍲 ホットクック設定</div>
       <div class="callout-body">${r.hcMode}</div>
     </div>`:''}
 
