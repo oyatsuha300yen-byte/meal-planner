@@ -923,7 +923,9 @@ const RECIPES = [
  steps:['厚揚げを両面焼き','醤油・みりんで味付け','薬味を散らす'],
  hcMode:'',
  kidTip:'ボリュームあって満足感。',
- hide:'',tags:['和食','副菜']}
+ hide:'',tags:['和食','副菜']},
+{id:'nosoup',name:'（汁物なし）',emoji:'―',category:'soup',tool:'stove',cuisine:'和食',source:'',time:0,servings:4,kcal:0,p:0,f:0,c:0,
+ ingredients:[],steps:[],hcMode:'',kidTip:'',hide:'hidden',tags:['スキップ']}
 ];
 
 /* ==============================
@@ -1475,7 +1477,7 @@ function renderDayMeals(){
           <button class="icon-btn" data-regen-slot="sub">🔄</button>
         </div>
       </div>
-      <div class="meal-row">
+      ${soup.id==='nosoup' ? '' : `<div class="meal-row">
         <div class="left">
           <span class="tag tag-soup">汁物</span>
           ${toolTag(soup.tool)}
@@ -1485,7 +1487,7 @@ function renderDayMeals(){
           <button class="icon-btn" data-recipe="${soup.id}">📖</button>
           <button class="icon-btn" data-regen-slot="soup">🔄</button>
         </div>
-      </div>
+      </div>`}
       <div class="bar">
         <div class="seg bp" style="width:${(pSum/kSum*100).toFixed(0)}%"></div>
         <div class="seg bf" style="width:${(fSum/kSum*100).toFixed(0)}%"></div>
@@ -1889,7 +1891,7 @@ document.getElementById('btn-3days').onclick=()=>{
 /* ==============================
    初期化
    ============================== */
-if(!store.get('seed_2026_04_23_v2',false)){
+if(!store.get('seed_2026_04_23_v3',false)){
   const seed = [
     'きゅうり','きゅうり','レタス','豆腐',
     'ごぼう','もやし','玉ねぎ','じゃがいも','にんじん','キャベツ','白ネギ','小松菜','えのき',
@@ -1903,9 +1905,20 @@ if(!store.get('seed_2026_04_23_v2',false)){
     }
   });
   store.set('inventory', STATE.inventory);
-  generatePlan();
-  if(STATE.inventory.length>0) generateThreeDays();
-  store.set('seed_2026_04_23_v2', true);
+  if(!STATE.plan) generatePlan();
+  // 在庫ベースで1週目を厳選献立に差し替え（カレー日は汁物なし・和洋中バランス）
+  const curated = [
+    {main:'buta-shogayaki', sub:'potatosalad',   soup:'kenchin'},       // 月 和
+    {main:'shake-mune',     sub:'coleslaw',      soup:'minestrone'},    // 火 洋
+    {main:'tofu-steak',     sub:'moyashi-namul', soup:'tonjiru'},       // 水 和
+    {main:'keema',          sub:'haruharu',      soup:'nosoup'},        // 木 カレー
+    {main:'teriyaki',       sub:'kinpira',       soup:'asari-miso'},    // 金 和
+    {main:'napolitan',      sub:'macaroni-salad',soup:'kabocha-soup'},  // 土 洋
+    {main:'yakizakana',     sub:'tofu-hiya',     soup:'wakame-soup'},   // 日 和
+  ];
+  STATE.plan['w1'] = curated.map(c=>({...c, feedback:{}, memo:'', extras:[]}));
+  save();
+  store.set('seed_2026_04_23_v3', true);
 }
 if(!STATE.plan) generatePlan();
 if(!store.get('jumpedToToday',false)){
