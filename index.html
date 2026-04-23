@@ -292,7 +292,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v19</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v20</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材優先で月〜水の3日分を作成">🎯 在庫で3日</button>
@@ -988,34 +988,32 @@ const DAYS = ['月','火','水','木','金','土','日'];
 const DAY_KEY = ['mon','tue','wed','thu','fri','sat','sun'];
 const TODAY = new Date();
 
-// 次の月曜日（今日が月曜ならそのまま）を返す。献立は「これからの1週間」を起点にする。
-function getUpcomingMonday(){
+// 今週の月曜日（今日を含む週の月曜）を返す
+function getThisMonday(){
   const d = new Date();
   d.setHours(0,0,0,0);
   const dow = d.getDay(); // 0=日, 1=月, ... 6=土
-  // 月曜なら当日、それ以外は次の月曜
-  const diff = dow === 1 ? 0 : (dow === 0 ? 1 : 8 - dow);
+  const diff = dow === 0 ? -6 : 1 - dow;
   d.setDate(d.getDate()+diff);
   return d;
 }
-// 後方互換
-function getThisMonday(){ return getUpcomingMonday(); }
+// プランの起点は「今日の週が4週目」になる位置 = 今週月曜の3週間前
 function getPlanStart(){
-  const upcoming = getUpcomingMonday();
+  const thisMon = getThisMonday();
+  const start = new Date(thisMon);
+  start.setDate(start.getDate() - 21); // 3週間前の月曜
   const stored = store.get('planStartDate',null);
   if(stored){
     const d = new Date(stored);
     d.setHours(0,0,0,0);
-    // 保存済みの起点が過去（今日より前）になっていたら、来週月曜に繰り上げ
-    const today = new Date(); today.setHours(0,0,0,0);
-    if(d < today){
-      store.set('planStartDate', upcoming.toISOString());
-      return upcoming;
+    if(d.getTime() !== start.getTime()){
+      store.set('planStartDate', start.toISOString());
+      return start;
     }
     return d;
   }
-  store.set('planStartDate', upcoming.toISOString());
-  return upcoming;
+  store.set('planStartDate', start.toISOString());
+  return start;
 }
 function getDayDate(weekIdx, dayIdx){
   const start = getPlanStart();
