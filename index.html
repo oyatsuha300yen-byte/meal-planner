@@ -1640,6 +1640,12 @@ function inferCategory(name){
   return 'その他';
 }
 
+function defaultUnit(name, cat){
+  // 肉のみグラム単位。魚・しらす・エビ等は個数のまま
+  if(/豚|鶏|牛|ひき肉|合いびき|ミンチ|ベーコン|ハム|ウインナー|ソーセージ/.test(name)) return {unit:'g', step:100};
+  if(/牛乳|生クリーム/.test(name)) return {unit:'ml', step:200};
+  return {unit:'個', step:1};
+}
 function normalizeInv(){
   STATE.inventory.forEach(it=>{
     // 旧スキーマ（location/status）からの移行
@@ -1649,9 +1655,20 @@ function normalizeInv(){
       delete it.status;
       delete it.location;
     }
-    if(it.qty===undefined) it.qty = 1;
-    if(it.refill===undefined) it.refill = false;
     if(!it.category) it.category = inferCategory(it.name);
+    const d = defaultUnit(it.name, it.category);
+    // 誤って魚類がgに移行されていた場合は個に戻す
+    if(it.unit==='g' && d.unit==='個'){
+      it.qty = Math.max(1, Math.round((it.qty||100)/100));
+      it.unit='個'; it.step=1;
+    }
+    if(!it.unit) it.unit = d.unit;
+    if(!it.step) it.step = d.step;
+    // 旧「個」データを肉はgに移行: qty=1 → qty=100g(1切れ相当)
+    if(it.unit==='g' && it.qty!==undefined && it.qty<=5) it.qty = it.qty*100;
+    if(it.unit==='ml' && it.qty!==undefined && it.qty<=5) it.qty = it.qty*200;
+    if(it.qty===undefined) it.qty = it.step;
+    if(it.refill===undefined) it.refill = false;
   });
 }
 function invHaveNames(){
@@ -1701,7 +1718,7 @@ function renderInventory(){
               <div class="inv-card ${it.qty===0?'qty-zero':''} ${it.refill?'refill-on':''}" data-i="${i}">
                 <button class="inv-del" data-x="${i}" aria-label="削除">×</button>
                 <div class="inv-name">${it.name}</div>
-                <div class="inv-qty">${it.qty}</div>
+                <div class="inv-qty">${it.qty}${it.unit && it.unit!=='個'?`<span style="font-size:14px;font-weight:600;margin-left:2px">${it.unit}</span>`:''}</div>
                 <div class="inv-pm">
                   <button class="pm-btn pm-minus" data-m="${i}">−</button>
                   <button class="pm-btn pm-plus" data-p="${i}">＋</button>
@@ -1732,10 +1749,10 @@ function renderInventory(){
 
   // カード操作
   el.querySelectorAll('.pm-plus').forEach(b=>b.onclick=()=>{
-    const i=+b.dataset.p; STATE.inventory[i].qty++; if(STATE.inventory[i].qty>=1) STATE.inventory[i].refill=false; save();render();
+    const i=+b.dataset.p; const it=STATE.inventory[i]; it.qty += (it.step||1); if(it.qty>=1) it.refill=false; save();render();
   });
   el.querySelectorAll('.pm-minus').forEach(b=>b.onclick=()=>{
-    const i=+b.dataset.m; STATE.inventory[i].qty=Math.max(0,STATE.inventory[i].qty-1); save();render();
+    const i=+b.dataset.m; const it=STATE.inventory[i]; it.qty=Math.max(0, it.qty - (it.step||1)); save();render();
   });
   el.querySelectorAll('.inv-refill').forEach(b=>b.onclick=()=>{
     const i=+b.dataset.r; STATE.inventory[i].refill=!STATE.inventory[i].refill; save();render();
@@ -1759,8 +1776,12 @@ function addInvFromInput(){
   const v=inp.value.trim();if(!v)return;
   v.split(/[、,]/).map(s=>s.trim()).filter(Boolean).forEach(name=>{
     const existing = STATE.inventory.find(i=>i.name===name);
-    if(existing){ existing.qty++; existing.refill=false; }
-    else STATE.inventory.push({name,category:sel.value||inferCategory(name),qty:1,refill:false,addedAt:new Date().toISOString()});
+    if(existing){ existing.qty += (existing.step||1); existing.refill=false; }
+    else {
+      const cat = sel.value||inferCategory(name);
+      const d = defaultUnit(name, cat);
+      STATE.inventory.push({name,category:cat,qty:d.step,unit:d.unit,step:d.step,refill:false,addedAt:new Date().toISOString()});
+    }
   });
   inp.value='';save();render();
 }
@@ -1776,8 +1797,11 @@ function renderQuickItemsInv(){
   el.querySelectorAll('.quick-chip').forEach(b=>b.onclick=()=>{
     const n=b.dataset.n;
     const existing=STATE.inventory.find(i=>i.name===n);
-    if(existing){ existing.qty++; existing.refill=false; }
-    else STATE.inventory.push({name:n,category:cat,qty:1,refill:false,addedAt:new Date().toISOString()});
+    if(existing){ existing.qty += (existing.step||1); existing.refill=false; }
+    else {
+      const d = defaultUnit(n, cat);
+      STATE.inventory.push({name:n,category:cat,qty:d.step,unit:d.unit,step:d.step,refill:false,addedAt:new Date().toISOString()});
+    }
     save();render();
   });
   if(sel) sel.onchange = renderQuickItemsInv;
