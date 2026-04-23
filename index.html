@@ -987,25 +987,34 @@ const DAYS = ['月','火','水','木','金','土','日'];
 const DAY_KEY = ['mon','tue','wed','thu','fri','sat','sun'];
 const TODAY = new Date();
 
-// 今週の月曜日（週の起点）を返す
-function getThisMonday(){
+// 次の月曜日（今日が月曜ならそのまま）を返す。献立は「これからの1週間」を起点にする。
+function getUpcomingMonday(){
   const d = new Date();
   d.setHours(0,0,0,0);
   const dow = d.getDay(); // 0=日, 1=月, ... 6=土
-  const diff = dow === 0 ? -6 : 1 - dow;
+  // 月曜なら当日、それ以外は次の月曜
+  const diff = dow === 1 ? 0 : (dow === 0 ? 1 : 8 - dow);
   d.setDate(d.getDate()+diff);
   return d;
 }
+// 後方互換
+function getThisMonday(){ return getUpcomingMonday(); }
 function getPlanStart(){
+  const upcoming = getUpcomingMonday();
   const stored = store.get('planStartDate',null);
   if(stored){
     const d = new Date(stored);
     d.setHours(0,0,0,0);
+    // 保存済みの起点が過去（今日より前）になっていたら、来週月曜に繰り上げ
+    const today = new Date(); today.setHours(0,0,0,0);
+    if(d < today){
+      store.set('planStartDate', upcoming.toISOString());
+      return upcoming;
+    }
     return d;
   }
-  const m = getThisMonday();
-  store.set('planStartDate', m.toISOString());
-  return m;
+  store.set('planStartDate', upcoming.toISOString());
+  return upcoming;
 }
 function getDayDate(weekIdx, dayIdx){
   const start = getPlanStart();
