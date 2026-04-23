@@ -1,10 +1,66 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="#059669"/>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fce7f3"/>
+      <stop offset="50%" stop-color="#fbcfe8"/>
+      <stop offset="100%" stop-color="#f9a8d4"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#be185d"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#fdf2f8"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#g)"/>
-  <text x="256" y="352" font-size="288" text-anchor="middle" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji">🍱</text>
+
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- 星キラキラ -->
+  <g fill="#fde047" opacity="0.9">
+    <path d="M90 130 l8 16 l16 4 l-12 12 l4 18 l-16 -8 l-16 8 l4 -18 l-12 -12 l16 -4z"/>
+    <path d="M420 100 l6 12 l12 3 l-9 9 l3 14 l-12 -6 l-12 6 l3 -14 l-9 -9 l12 -3z"/>
+    <path d="M440 380 l5 10 l10 2 l-7 7 l2 11 l-10 -5 l-10 5 l2 -11 l-7 -7 l10 -2z"/>
+  </g>
+
+  <!-- スパークル -->
+  <g fill="#ffffff" opacity="0.85">
+    <circle cx="120" cy="380" r="6"/>
+    <circle cx="380" cy="200" r="5"/>
+    <circle cx="100" cy="250" r="4"/>
+    <circle cx="400" cy="320" r="4"/>
+  </g>
+
+  <!-- 煙突から出る煙 -->
+  <g fill="#ffffff" opacity="0.7">
+    <circle cx="340" cy="160" r="14"/>
+    <circle cx="355" cy="135" r="12"/>
+    <circle cx="345" cy="110" r="10"/>
+  </g>
+
+  <!-- 屋根 -->
+  <path d="M140 240 L256 140 L372 240 Z" fill="url(#roof)"/>
+
+  <!-- 煙突 -->
+  <rect x="320" y="180" width="28" height="40" fill="#be185d"/>
+
+  <!-- 家本体 -->
+  <rect x="170" y="240" width="172" height="160" rx="8" fill="url(#wall)" stroke="#f9a8d4" stroke-width="3"/>
+
+  <!-- ドア -->
+  <rect x="232" y="310" width="48" height="90" rx="6" fill="#ec4899"/>
+  <circle cx="270" cy="358" r="3" fill="#fde047"/>
+
+  <!-- 窓 -->
+  <rect x="190" y="270" width="32" height="32" rx="4" fill="#bae6fd" stroke="#fff" stroke-width="3"/>
+  <rect x="290" y="270" width="32" height="32" rx="4" fill="#bae6fd" stroke="#fff" stroke-width="3"/>
+
+  <!-- 買い物バッグ -->
+  <g transform="translate(355,335)">
+    <path d="M0 12 L60 12 L54 70 L6 70 Z" fill="#f472b6" stroke="#be185d" stroke-width="2"/>
+    <path d="M14 12 Q14 -8 30 -8 Q46 -8 46 12" fill="none" stroke="#be185d" stroke-width="3"/>
+    <text x="30" y="50" font-size="26" text-anchor="middle" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji">🥕</text>
+  </g>
 </svg>
