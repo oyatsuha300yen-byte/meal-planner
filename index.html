@@ -117,19 +117,32 @@ main{padding:12px}
 .quick-item{padding:5px 10px;border-radius:20px;background:#fff;font-size:12px;border:1px solid var(--r-light);color:var(--r)}
 .quick-item.in-stock{background:var(--g-light);color:var(--g2);border-color:var(--g)}
 
-/* 在庫ステータス（traffic light）UI */
-.status-legend{font-size:12px;display:flex;gap:12px;align-items:center;margin-bottom:10px;color:#6b7280;flex-wrap:wrap;padding:8px 10px;background:var(--g-bg);border-radius:8px}
-.loc-group{margin-bottom:14px;background:#fff;border-radius:10px;padding:10px;border:1px solid var(--gray-border)}
-.loc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.loc-head h3{margin:0;font-size:15px}
-.loc-add{background:transparent;border:1px solid var(--gray-border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--g2)}
-.loc-chips{display:flex;flex-wrap:wrap;gap:6px}
-.loc-empty{color:#9ca3af;font-size:13px;padding:4px}
-.status-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:18px;font-size:13px;cursor:pointer;user-select:none;border:1px solid transparent}
-.status-have{background:#d1fae5;color:#065f46}
-.status-low{background:#fef3c7;color:#92400e}
-.status-none{background:#fee2e2;color:#991b1b;text-decoration:line-through;opacity:.7}
-.status-chip .x{margin-left:4px;opacity:.5;padding:0 2px;cursor:pointer}
+/* 在庫: 数量カード式 */
+.inv-search{margin-bottom:10px}
+.inv-search input{width:100%;padding:10px 14px;border:1.5px solid var(--gray-border);border-radius:10px;outline:none;font-size:14px;background:#fff}
+.inv-search input:focus{border-color:var(--g)}
+.inv-summary{display:flex;gap:14px;font-size:13px;color:var(--text-sub);margin-bottom:10px;padding:0 4px}
+.cat-group{margin-bottom:14px;background:#fff;border-radius:10px;padding:10px 10px 12px;border:1px solid var(--gray-border)}
+.cat-head{font-weight:700;font-size:14px;margin-bottom:10px}
+.cat-count{color:var(--text-sub);font-weight:400;font-size:12px;margin-left:4px}
+.inv-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:8px}
+.inv-card{position:relative;background:#fff;border:2px solid var(--o);border-radius:12px;padding:10px 8px 8px;text-align:center}
+.inv-card.qty-zero{border-color:#fca5a5;background:#fef2f2;opacity:.85}
+.inv-card.refill-on{border-color:var(--o);background:#fff7ed}
+.inv-del{position:absolute;top:4px;right:4px;background:transparent;border:none;color:#9ca3af;font-size:16px;line-height:1;padding:2px 6px;cursor:pointer}
+.inv-name{font-size:12px;font-weight:600;margin-bottom:6px;margin-top:2px;line-height:1.2;word-break:break-all;padding-right:14px}
+.inv-qty{font-size:24px;font-weight:800;color:var(--o2);line-height:1;margin-bottom:6px}
+.inv-card.qty-zero .inv-qty{color:#dc2626}
+.inv-pm{display:flex;gap:4px;margin-bottom:6px}
+.pm-btn{flex:1;padding:5px 0;border:1px solid var(--gray-border);border-radius:6px;background:#fff;font-weight:700;font-size:14px;cursor:pointer;line-height:1}
+.pm-btn.pm-plus{background:var(--g);color:#fff;border-color:var(--g)}
+.inv-refill{width:100%;padding:5px 0;border:1px solid var(--o);background:#fff;color:var(--o2);border-radius:6px;font-size:12px;cursor:pointer;font-weight:600}
+.inv-refill.on{background:var(--o);color:#fff}
+.quick-title{font-size:12px;color:var(--text-sub);margin:10px 0 6px}
+.quick-items-inv{display:flex;flex-wrap:wrap;gap:4px}
+.quick-chip{padding:5px 10px;border-radius:16px;background:#fff;font-size:12px;border:1px solid var(--gray-border);cursor:pointer;color:var(--text);user-select:none}
+.quick-chip.in-stock{background:var(--g-light);color:var(--g2);border-color:var(--g)}
+#inv-cat-sel{padding:10px 6px;border:2px solid var(--gray-border);border-radius:10px;background:#fff;font-size:13px}
 
 /* Bottom nav */
 nav.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--gray-border);display:flex;padding:6px 4px 10px;z-index:20}
@@ -303,11 +316,7 @@ details.sim[open] summary{margin-bottom:8px}
   <!-- 冷蔵庫 -->
   <section class="view" id="view-fridge">
     <div class="card">
-      <h2>🥬 食材在庫チェック</h2>
-      <div class="input-row">
-        <input id="inv-input" placeholder="例: キャベツ、卵（場所は自動判定）">
-        <button id="inv-add">追加</button>
-      </div>
+      <h2>🥬 うちの食材</h2>
       <div id="inv-list"></div>
     </div>
   </section>
@@ -1611,98 +1620,170 @@ function daysLeft(dateStr){
   return Math.round((d-today)/86400000);
 }
 
-/* 在庫: 保管場所 + 3段階ステータス */
-const STORAGE_LOCATIONS = ['冷蔵庫','冷凍庫','常温','調味料'];
-const STORAGE_ICONS = {'冷蔵庫':'🧊','冷凍庫':'❄️','常温':'🥫','調味料':'🧂'};
-const STATUS_ICONS = {'have':'🟢','low':'🟡','none':'🔴'};
+/* 在庫: カテゴリ + 数量 + 補充フラグ */
+const INV_CATEGORIES = ['野菜・きのこ','肉・魚','卵・豆腐','乳製品','調味料','その他'];
+const INV_CAT_ICONS = {'野菜・きのこ':'🥬','肉・魚':'🥩','卵・豆腐':'🥚','乳製品':'🥛','調味料':'🧂','その他':'📦'};
 
-function inferLocation(name){
-  const seasoning = ['醤油','味噌','みりん','砂糖','塩','酢','ケチャップ','マヨネーズ','だし','油','こしょう','カレー粉','オイスター','片栗粉','コンソメ'];
-  const freezer = ['冷凍'];
-  const room = ['玉ねぎ','じゃがいも','にんじん','ごぼう','キャベツ','白ネギ','長ねぎ','もやし','えのき','タケノコ','たけのこ','米','かぼちゃ','さつまいも','春雨','パスタ','うどん','そば','缶','乾燥'];
+function inferCategory(name){
+  const meat = ['豚','鶏','牛','合いびき','合い挽き','ひき肉','ハム','ベーコン','ウインナー','ソーセージ','鮭','サバ','さば','ぶり','ブリ','しらす','エビ','えび','あさり','イカ','いか','タラ','たら','まぐろ','マグロ'];
+  const egg = ['卵','たまご','豆腐','油揚げ','厚揚げ','納豆','がんも'];
+  const milk = ['牛乳','バター','チーズ','ヨーグルト','生クリーム'];
+  const seasoning = ['醤油','味噌','みりん','砂糖','塩','酢','ケチャップ','マヨネーズ','だし','油','こしょう','カレー粉','オイスター','片栗粉','コンソメ','ソース'];
+  const other = ['米','パスタ','うどん','そば','春雨','缶','乾燥','パン','小麦粉'];
+  const veg = ['キャベツ','玉ねぎ','たまねぎ','じゃがいも','にんじん','大根','ほうれん草','小松菜','ピーマン','もやし','長ねぎ','白ネギ','ねぎ','トマト','きゅうり','レタス','ごぼう','しょうが','にんにく','ニラ','えのき','しめじ','しいたけ','まいたけ','なす','かぼちゃ','ブロッコリー','アスパラ','タケノコ','たけのこ','ふき','さつまいも'];
   if(seasoning.some(s=>name.includes(s))) return '調味料';
-  if(freezer.some(s=>name.includes(s))) return '冷凍庫';
-  if(room.some(s=>name.includes(s))) return '常温';
-  return '冷蔵庫';
+  if(milk.some(s=>name.includes(s))) return '乳製品';
+  if(egg.some(s=>name.includes(s))) return '卵・豆腐';
+  if(meat.some(s=>name.includes(s))) return '肉・魚';
+  if(other.some(s=>name.includes(s))) return 'その他';
+  if(veg.some(s=>name.includes(s))) return '野菜・きのこ';
+  return 'その他';
 }
+
 function normalizeInv(){
   STATE.inventory.forEach(it=>{
-    if(!it.location) it.location = inferLocation(it.name);
-    if(!it.status) it.status = 'have';
+    // 旧スキーマ（location/status）からの移行
+    if(it.status && it.qty===undefined){
+      it.qty = it.status==='none' ? 0 : 1;
+      it.refill = it.status==='low';
+      delete it.status;
+      delete it.location;
+    }
+    if(it.qty===undefined) it.qty = 1;
+    if(it.refill===undefined) it.refill = false;
+    if(!it.category) it.category = inferCategory(it.name);
   });
 }
 function invHaveNames(){
   normalizeInv();
-  return STATE.inventory.filter(i=>i.status==='have').map(i=>i.name);
+  return STATE.inventory.filter(i=>i.qty>=1).map(i=>i.name);
 }
+
+const COMMON_INGREDIENTS = {
+  '野菜・きのこ':['たまねぎ','じゃがいも','にんじん','キャベツ','大根','ほうれん草','トマト','きゅうり','長ねぎ','なす','ブロッコリー','もやし','小松菜','ピーマン','レタス','ごぼう','えのき','しめじ','タケノコ'],
+  '肉・魚':['豚こま','豚バラ','豚ロース','鶏もも','鶏むね','合いびき肉','鮭','冷凍鮭','ぶり','ベーコン','ウインナー','しらす'],
+  '卵・豆腐':['卵','豆腐','納豆','油揚げ','厚揚げ'],
+  '乳製品':['牛乳','バター','チーズ','ヨーグルト'],
+  '調味料':['醤油','味噌','みりん','砂糖','塩','酢','ケチャップ','マヨネーズ','だし'],
+  'その他':['米','パスタ','うどん','春雨']
+};
 
 function renderInventory(){
   normalizeInv();
   const el=document.getElementById('inv-list');
+  const q = (STATE.invSearch||'').trim().toLowerCase();
+  const items = STATE.inventory.map((it,i)=>({it,i})).filter(({it})=>!q||it.name.toLowerCase().includes(q));
   const grouped={};
-  STORAGE_LOCATIONS.forEach(loc=>grouped[loc]=[]);
-  STATE.inventory.forEach((it,i)=>{
-    const loc = STORAGE_LOCATIONS.includes(it.location) ? it.location : '冷蔵庫';
-    grouped[loc].push({it,i});
+  INV_CATEGORIES.forEach(c=>grouped[c]=[]);
+  items.forEach(({it,i})=>{
+    const c = INV_CATEGORIES.includes(it.category) ? it.category : 'その他';
+    grouped[c].push({it,i});
   });
+
+  const totalCount = STATE.inventory.length;
+  const lowCount = STATE.inventory.filter(x=>x.qty===0||x.refill).length;
+
   el.innerHTML = `
-    <div class="status-legend">
-      <span>🟢 ある</span><span>🟡 少ない</span><span>🔴 ない</span>
-      <span style="margin-left:auto;font-size:11px">タップで切替</span>
+    <div class="inv-search">
+      <input type="text" id="inv-search-input" placeholder="🔍 食材を検索..." value="${STATE.invSearch||''}">
     </div>
-    ${STORAGE_LOCATIONS.map(loc=>`
-      <div class="loc-group">
-        <div class="loc-head">
-          <h3>${STORAGE_ICONS[loc]} ${loc}</h3>
-          <button class="loc-add" data-loc="${loc}">＋追加</button>
-        </div>
-        <div class="loc-chips">
-          ${grouped[loc].length===0
-            ? '<div class="loc-empty">登録なし</div>'
-            : grouped[loc].map(({it,i})=>`
-                <span class="status-chip status-${it.status}" data-i="${i}">
-                  ${STATUS_ICONS[it.status]} <span>${it.name}</span>
-                  <span class="x" data-x="${i}">×</span>
-                </span>`).join('')}
-        </div>
+    <div class="inv-summary">
+      <span>📦 登録 ${totalCount}品</span>
+      <span style="color:var(--o2)">🛒 買い足し ${lowCount}品</span>
+    </div>
+    ${INV_CATEGORIES.map(cat=>{
+      if(grouped[cat].length===0) return '';
+      return `
+        <div class="cat-group">
+          <div class="cat-head">${INV_CAT_ICONS[cat]} ${cat} <span class="cat-count">(${grouped[cat].length}品)</span></div>
+          <div class="inv-cards">
+            ${grouped[cat].map(({it,i})=>`
+              <div class="inv-card ${it.qty===0?'qty-zero':''} ${it.refill?'refill-on':''}" data-i="${i}">
+                <button class="inv-del" data-x="${i}" aria-label="削除">×</button>
+                <div class="inv-name">${it.name}</div>
+                <div class="inv-qty">${it.qty}</div>
+                <div class="inv-pm">
+                  <button class="pm-btn pm-minus" data-m="${i}">−</button>
+                  <button class="pm-btn pm-plus" data-p="${i}">＋</button>
+                </div>
+                <button class="inv-refill ${it.refill?'on':''}" data-r="${i}">${it.refill?'✓ 補充済':'補充'}</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+    }).join('')}
+    <div class="cat-group" style="background:var(--g-bg);border-color:var(--g-light)">
+      <div class="cat-head">＋ 追加</div>
+      <div class="input-row">
+        <input id="inv-input" placeholder="食材名（カンマ区切り可）">
+        <select id="inv-cat-sel">
+          ${INV_CATEGORIES.map(c=>`<option value="${c}">${INV_CAT_ICONS[c]} ${c}</option>`).join('')}
+        </select>
+        <button id="inv-add">追加</button>
       </div>
-    `).join('')}
+      <div class="quick-title">💡 よく使う食材（タップで追加）</div>
+      <div class="quick-items-inv" id="quick-items-inv"></div>
+    </div>
   `;
-  el.querySelectorAll('.status-chip').forEach(c=>c.onclick=e=>{
-    if(e.target.classList.contains('x')){
-      STATE.inventory.splice(+e.target.dataset.x,1);save();render();return;
-    }
-    const i=+c.dataset.i;
-    const cur=STATE.inventory[i].status;
-    STATE.inventory[i].status = cur==='have'?'low':cur==='low'?'none':'have';
-    save();render();
+
+  // 検索
+  const si = document.getElementById('inv-search-input');
+  si.oninput = e=>{ STATE.invSearch = e.target.value; renderInventory(); };
+
+  // カード操作
+  el.querySelectorAll('.pm-plus').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.p; STATE.inventory[i].qty++; if(STATE.inventory[i].qty>=1) STATE.inventory[i].refill=false; save();render();
   });
-  el.querySelectorAll('.loc-add').forEach(b=>b.onclick=()=>{
-    const loc=b.dataset.loc;
-    const v=prompt(`${loc}に追加（カンマ区切り可）`);
-    if(!v)return;
-    v.split(/[、,]/).map(s=>s.trim()).filter(Boolean).forEach(name=>{
-      if(!STATE.inventory.some(i=>i.name===name))
-        STATE.inventory.push({name,location:loc,status:'have',addedAt:new Date().toISOString()});
-    });
-    save();render();
+  el.querySelectorAll('.pm-minus').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.m; STATE.inventory[i].qty=Math.max(0,STATE.inventory[i].qty-1); save();render();
   });
+  el.querySelectorAll('.inv-refill').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.r; STATE.inventory[i].refill=!STATE.inventory[i].refill; save();render();
+  });
+  el.querySelectorAll('.inv-del').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    STATE.inventory.splice(+b.dataset.x,1); save();render();
+  });
+
+  // 追加UI
+  document.getElementById('inv-add').onclick = addInvFromInput;
+  document.getElementById('inv-input').addEventListener('keypress',e=>{
+    if(e.key==='Enter') addInvFromInput();
+  });
+  renderQuickItemsInv();
 }
 
-function renderQuickInput(){ /* 旧クイック入力は廃止（在庫タブを場所別に再構築済み） */ }
-
-document.getElementById('inv-add').onclick=()=>{
+function addInvFromInput(){
   const inp=document.getElementById('inv-input');
+  const sel=document.getElementById('inv-cat-sel');
   const v=inp.value.trim();if(!v)return;
   v.split(/[、,]/).map(s=>s.trim()).filter(Boolean).forEach(name=>{
-    if(!STATE.inventory.some(i=>i.name===name))
-      STATE.inventory.push({name,location:inferLocation(name),status:'have',addedAt:new Date().toISOString()});
+    const existing = STATE.inventory.find(i=>i.name===name);
+    if(existing){ existing.qty++; existing.refill=false; }
+    else STATE.inventory.push({name,category:sel.value||inferCategory(name),qty:1,refill:false,addedAt:new Date().toISOString()});
   });
   inp.value='';save();render();
-};
-document.getElementById('inv-input').addEventListener('keypress',e=>{
-  if(e.key==='Enter')document.getElementById('inv-add').click();
-});
+}
+
+function renderQuickItemsInv(){
+  const el=document.getElementById('quick-items-inv');
+  if(!el)return;
+  const sel=document.getElementById('inv-cat-sel');
+  const cat = sel ? sel.value : '野菜・きのこ';
+  const items = COMMON_INGREDIENTS[cat]||[];
+  const invNames = STATE.inventory.map(i=>i.name);
+  el.innerHTML = items.map(n=>`<div class="quick-chip ${invNames.includes(n)?'in-stock':''}" data-n="${n}">${invNames.includes(n)?'✓':'+'} ${n}</div>`).join('');
+  el.querySelectorAll('.quick-chip').forEach(b=>b.onclick=()=>{
+    const n=b.dataset.n;
+    const existing=STATE.inventory.find(i=>i.name===n);
+    if(existing){ existing.qty++; existing.refill=false; }
+    else STATE.inventory.push({name:n,category:cat,qty:1,refill:false,addedAt:new Date().toISOString()});
+    save();render();
+  });
+  if(sel) sel.onchange = renderQuickItemsInv;
+}
+
+function renderQuickInput(){ /* 廃止（新UIに統合） */ }
 
 /* ==============================
    買い物リスト
@@ -1739,6 +1820,9 @@ function renderShopList(){
 
   const hasAnyExtra = Object.keys(extrasByCat).length>0;
 
+  // 在庫で「買い足し」フラグ or 数量ゼロのアイテム
+  const refillItems = STATE.inventory.filter(it=>it.qty===0||it.refill);
+
   el.innerHTML = orderedCats.map(c=>{
     const normalItems = (byCat[c]||[]).map(item=>{
       const have=invNames.some(n=>item.n.includes(n)||n.includes(item.n));
@@ -1761,6 +1845,15 @@ function renderShopList(){
     </div>`;
   }).join('') || '<div class="empty">献立がありません</div>';
 
+  if(refillItems.length){
+    const refillHtml = `
+    <div class="shop-cat" style="border:2px solid var(--o);background:#fff7ed">
+      <h3>🛒 在庫の買い足し（${refillItems.length}品）</h3>
+      ${refillItems.map(it=>`<div class="shop-item"><span>${it.qty===0?'🔴':'🟡'} ${it.name}</span><span class="amt">${it.qty===0?'切らした':'補充'}</span></div>`).join('')}
+    </div>`;
+    el.innerHTML = refillHtml + el.innerHTML;
+  }
+
   if(hasAnyExtra){
     el.innerHTML = `<div class="note" style="margin-bottom:10px;background:var(--o-light);padding:8px 10px;border-radius:8px;color:#78350f">⭐ 特別食材: ${Object.values(extrasByCat).flat().length}品（日付タグ付き）</div>` + el.innerHTML;
   }
@@ -1781,9 +1874,14 @@ function buildShopText(){
     (day.extras||[]).forEach(ex=>extras.push({...ex,day:DAYS[di]}));
   });
   const invNames=invHaveNames();
+  const refillItems = STATE.inventory.filter(it=>it.qty===0||it.refill);
   let text=`🛒 ${STATE.currentWeek}週目の買い物リスト\n\n【通常食材】\n`+
     Object.entries(tally).filter(([n])=>!invNames.some(x=>n.includes(x)||x.includes(n)))
       .map(([n,a])=>`□ ${n} (${[...new Set(a)].join(', ')})`).join('\n');
+  if(refillItems.length){
+    text += `\n\n【🛒 在庫の買い足し】\n` +
+      refillItems.map(it=>`□ ${it.name} ${it.qty===0?'(切らした)':'(補充)'}`).join('\n');
+  }
   if(extras.length){
     text += `\n\n【⭐ 特別食材（日付指定）】\n` +
       extras.map(e=>`□ [${e.day}] ${e.n} (${e.a})`).join('\n');
