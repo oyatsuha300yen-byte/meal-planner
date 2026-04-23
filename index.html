@@ -925,7 +925,19 @@ const RECIPES = [
  kidTip:'ボリュームあって満足感。',
  hide:'',tags:['和食','副菜']},
 {id:'nosoup',name:'（汁物なし）',emoji:'―',category:'soup',tool:'stove',cuisine:'和食',source:'',time:0,servings:4,kcal:0,p:0,f:0,c:0,
- ingredients:[],steps:[],hcMode:'',kidTip:'',hide:'hidden',tags:['スキップ']}
+ ingredients:[],steps:[],hcMode:'',kidTip:'',hide:'hidden',tags:['スキップ']},
+{id:'wakatake-ni',name:'若竹煮',emoji:'🎋',category:'sub',tool:'hc-s',cuisine:'和食',source:'ホットクック',time:15,servings:4,kcal:70,p:4,f:1,c:10,
+ ingredients:[{n:'タケノコ',a:'200g',c:'野菜'},{n:'わかめ',a:'20g',c:'魚介'},{n:'だし',a:'300ml',c:'調味料'},{n:'醤油',a:'大1',c:'調味料'},{n:'みりん',a:'大1',c:'調味料'}],
+ steps:['タケノコを食べやすく切る','調味料とだしで煮る','わかめを加えてひと煮立ち'],
+ hcMode:'手動→煮物まぜない10分',
+ kidTip:'やさしい味で食べやすい。タケノコは薄切りに。',
+ hide:'',tags:['和食','副菜','タケノコ']},
+{id:'chinjao',name:'青椒肉絲',emoji:'🌶️',category:'main',tool:'stove',cuisine:'中華',source:'山本ゆり',time:15,servings:4,kcal:380,p:24,f:18,c:22,
+ ingredients:[{n:'豚肉',a:'250g',c:'肉類'},{n:'タケノコ',a:'150g',c:'野菜'},{n:'ピーマン',a:'3個',c:'野菜'},{n:'醤油',a:'大1',c:'調味料'},{n:'オイスターソース',a:'大1',c:'調味料'},{n:'片栗粉',a:'小2',c:'調味料'}],
+ steps:['豚肉・タケノコ・ピーマンを細切り','豚肉に下味と片栗粉','フライパンで炒めて調味'],
+ hcMode:'',
+ kidTip:'ピーマン細切りで食べやすく。辛味なしでOK。',
+ hide:'',tags:['中華','主菜','タケノコ']}
 ];
 
 /* ==============================
@@ -1891,9 +1903,9 @@ document.getElementById('btn-3days').onclick=()=>{
 /* ==============================
    初期化
    ============================== */
-if(!store.get('seed_2026_04_23_v4',false)){
+if(!store.get('seed_2026_04_23_v5',false)){
   const seed = [
-    'きゅうり','きゅうり','レタス','豆腐',
+    'きゅうり','きゅうり','レタス','豆腐','タケノコ',
     'ごぼう','もやし','玉ねぎ','じゃがいも','にんじん','キャベツ','白ネギ','小松菜','えのき',
     '豚肉','合いびき肉','冷凍鮭',
     '牛乳','バター','納豆','しらす'
@@ -1909,16 +1921,16 @@ if(!store.get('seed_2026_04_23_v4',false)){
   // 在庫ベースで1週目を厳選献立に差し替え（カレー日は汁物なし・和洋中バランス）
   const curated = [
     {main:'shake-mune',     sub:'coleslaw',      soup:'minestrone'},    // 月 洋（魚は週1・買い物直後）
-    {main:'buta-shogayaki', sub:'potatosalad',   soup:'kenchin'},       // 火 和
+    {main:'buta-shogayaki', sub:'wakatake-ni',   soup:'kenchin'},       // 火 和（筍）
     {main:'tofu-steak',     sub:'moyashi-namul', soup:'tonjiru'},       // 水 和
     {main:'keema',          sub:'haruharu',      soup:'nosoup'},        // 木 カレー
-    {main:'teriyaki',       sub:'kinpira',       soup:'asari-miso'},    // 金 和
+    {main:'teriyaki',       sub:'chikuzenni',    soup:'asari-miso'},    // 金 和（筍）
     {main:'napolitan',      sub:'macaroni-salad',soup:'kabocha-soup'},  // 土 洋
-    {main:'pork-cabbage',   sub:'tofu-hiya',     soup:'wakame-soup'},   // 日 中
+    {main:'chinjao',        sub:'tofu-hiya',     soup:'wakame-soup'},   // 日 中（筍・豚肉）
   ];
   STATE.plan['w1'] = curated.map(c=>({...c, feedback:{}, memo:'', extras:[]}));
   save();
-  store.set('seed_2026_04_23_v3', true);
+  store.set('seed_2026_04_23_v5', true);
 }
 if(!STATE.plan) generatePlan();
 if(!store.get('jumpedToToday',false)){
