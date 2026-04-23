@@ -292,7 +292,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v20</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v21</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材優先で月〜水の3日分を作成">🎯 在庫で3日</button>
@@ -1955,10 +1955,27 @@ document.getElementById('btn-share-shop').onclick=async()=>{
   }
 };
 
-// Service Worker登録（PWA/オフライン対応）
+// Service Worker登録（PWA/オフライン対応）＋自動更新
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  window.addEventListener('load', async ()=>{
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      // 新しいSWが見つかったら取得 → activate → 自動リロード
+      reg.addEventListener('updatefound', ()=>{
+        const nw = reg.installing;
+        if(!nw) return;
+        nw.addEventListener('statechange', ()=>{
+          if(nw.state==='activated'){
+            // 既にコントローラが居る場合のみリロード（初回インストールは除く）
+            if(navigator.serviceWorker.controller){
+              setTimeout(()=>location.reload(), 300);
+            }
+          }
+        });
+      });
+      // 起動ごとに更新チェック
+      reg.update().catch(()=>{});
+    } catch(e){}
   });
 }
 
