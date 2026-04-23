@@ -1641,9 +1641,13 @@ function inferCategory(name){
 }
 
 function defaultUnit(name, cat){
-  // 肉のみグラム単位。魚・しらす・エビ等は個数のまま
-  if(/豚|鶏|牛|ひき肉|合いびき|ミンチ|ベーコン|ハム|ウインナー|ソーセージ/.test(name)) return {unit:'g', step:100};
-  if(/牛乳|生クリーム/.test(name)) return {unit:'ml', step:200};
+  // 肉類はグラム単位（魚・しらす・エビ等は個のまま）
+  // "牛乳"は個数扱いにするので、肉マッチは「牛乳」を除外する
+  if(/豚|鶏|ひき肉|合いびき|ミンチ|ベーコン|ハム|ウインナー|ソーセージ/.test(name)) return {unit:'g', step:100};
+  if(/^牛(?!乳)|牛肉|牛こま|牛バラ|牛ロース|牛切り落とし/.test(name)) return {unit:'g', step:100};
+  // バターはグラム単位（10g刻み）
+  if(/バター/.test(name)) return {unit:'g', step:10};
+  if(/生クリーム/.test(name)) return {unit:'ml', step:200};
   return {unit:'個', step:1};
 }
 function normalizeInv(){
@@ -1657,15 +1661,27 @@ function normalizeInv(){
     }
     if(!it.category) it.category = inferCategory(it.name);
     const d = defaultUnit(it.name, it.category);
-    // 誤って魚類がgに移行されていた場合は個に戻す
-    if(it.unit==='g' && d.unit==='個'){
-      it.qty = Math.max(1, Math.round((it.qty||100)/100));
-      it.unit='個'; it.step=1;
+    // 単位が現在のデフォルトと違う場合は移行する
+    if(it.unit && it.unit!==d.unit){
+      if(it.unit==='g' && d.unit==='個'){
+        // 誤って魚類等がgになっていた → 個に戻す
+        it.qty = Math.max(1, Math.round((it.qty||100)/100));
+      } else if(it.unit==='ml' && d.unit==='個'){
+        // 牛乳などをmlから個に戻す
+        it.qty = Math.max(1, Math.round((it.qty||200)/200));
+      } else if(it.unit==='個' && d.unit==='g'){
+        // バターなどを個からgに移行（1個＝標準サイズ、バターは200g）
+        it.qty = /バター/.test(it.name) ? (it.qty||1)*200 : (it.qty||1)*d.step;
+      } else if(it.unit==='個' && d.unit==='ml'){
+        it.qty = (it.qty||1)*d.step;
+      }
+      it.unit = d.unit;
+      it.step = d.step;
     }
     if(!it.unit) it.unit = d.unit;
     if(!it.step) it.step = d.step;
     // 旧「個」データを肉はgに移行: qty=1 → qty=100g(1切れ相当)
-    if(it.unit==='g' && it.qty!==undefined && it.qty<=5) it.qty = it.qty*100;
+    if(it.unit==='g' && it.qty!==undefined && it.qty<=5 && !/バター/.test(it.name)) it.qty = it.qty*100;
     if(it.unit==='ml' && it.qty!==undefined && it.qty<=5) it.qty = it.qty*200;
     if(it.qty===undefined) it.qty = it.step;
     if(it.refill===undefined) it.refill = false;
