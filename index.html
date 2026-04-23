@@ -292,7 +292,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v21</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v22</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材優先で月〜水の3日分を作成">🎯 在庫で3日</button>
@@ -1309,7 +1309,7 @@ function renderSchedule(main, sub, soup){
   const mid = Math.round(total/2);
 
   const eventsHTML = sch.events.map(ev=>{
-    const trackIcon = ev.track==='L'?'🔥L':ev.track==='S'?'🔥S':'🍳';
+    const trackIcon = ev.track==='L'?'🍲L':ev.track==='S'?'🍲S':'🍳';
     if(ev.type==='prep'){
       return `<div class="seq-row start">
         <div class="seq-time">${fmtMin(ev.time)}</div>
@@ -1327,7 +1327,7 @@ function renderSchedule(main, sub, soup){
     return `<div class="seq-row done">
       <div class="seq-time">${fmtMin(ev.time)}</div>
       <div class="seq-icon">✅</div>
-      <div class="seq-text"><b>${trackIcon}</b> ${ev.item.name} 完成 🎉</div>
+      <div class="seq-text"><b>${trackIcon}</b> ${ev.item.name} 完成</div>
     </div>`;
   }).join('');
 
@@ -1352,11 +1352,11 @@ function renderSchedule(main, sub, soup){
 
     <div class="gantt">
       <div class="gantt-row">
-        <div class="gantt-label">🔥L<br>大鍋</div>
+        <div class="gantt-label">🍲L<br>大鍋</div>
         <div class="gantt-track">${sch.tracks.L.length?bars('L','l'):'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray)">なし</div>'}</div>
       </div>
       <div class="gantt-row">
-        <div class="gantt-label">🔥S<br>小鍋</div>
+        <div class="gantt-label">🍲S<br>小鍋</div>
         <div class="gantt-track">${sch.tracks.S.length?bars('S','s'):'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray)">なし</div>'}</div>
       </div>
       <div class="gantt-row">
@@ -1471,8 +1471,8 @@ function renderDayMeals(){
   const we = STATE.currentDay>=5?'weekend':'';
 
   function toolTag(t){
-    if(t==='hc-l')return '<span class="tag tag-hc-l">🔥L</span>';
-    if(t==='hc-s')return '<span class="tag tag-hc-s">🔥S</span>';
+    if(t==='hc-l')return '<span class="tag tag-hc-l">🍲L</span>';
+    if(t==='hc-s')return '<span class="tag tag-hc-s">🍲S</span>';
     return '<span class="tag tag-hc-s" style="background:#e5e7eb;color:#6b7280">🍳</span>';
   }
   function fbBtns(slot,cur){
@@ -2009,7 +2009,7 @@ function renderRecipeList(){
     <div class="recipe-tile" data-id="${r.id}">
       <span class="rt-emoji">${r.emoji}</span>
       <div class="rt-name">${r.name}</div>
-      <div class="rt-tags">${r.tool==='hc-l'?'🔥L':r.tool==='hc-s'?'🔥S':'🍳'} ${r.time}分</div>
+      <div class="rt-tags">${r.tool==='hc-l'?'🍲L':r.tool==='hc-s'?'🍲S':'🍳'} ${r.time}分</div>
     </div>
   `).join('');
   gEl.querySelectorAll('.recipe-tile').forEach(t=>t.onclick=()=>openRecipe(t.dataset.id));
