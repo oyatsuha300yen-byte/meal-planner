@@ -6,12 +6,12 @@
       <stop offset="100%" stop-color="#bef264"/>
     </linearGradient>
     <linearGradient id="roof" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ec4899"/>
-      <stop offset="100%" stop-color="#be185d"/>
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#ea580c"/>
     </linearGradient>
     <linearGradient id="wall" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#fdf2f8"/>
+      <stop offset="100%" stop-color="#fff7ed"/>
     </linearGradient>
   </defs>
 
@@ -44,13 +44,13 @@
   <path d="M140 240 L256 140 L372 240 Z" fill="url(#roof)"/>
 
   <!-- 煙突 -->
-  <rect x="320" y="180" width="28" height="40" fill="#be185d"/>
+  <rect x="320" y="180" width="28" height="40" fill="#ea580c"/>
 
   <!-- 家本体 -->
-  <rect x="170" y="240" width="172" height="160" rx="8" fill="url(#wall)" stroke="#f9a8d4" stroke-width="3"/>
+  <rect x="170" y="240" width="172" height="160" rx="8" fill="url(#wall)" stroke="#fdba74" stroke-width="3"/>
 
   <!-- ドア -->
-  <rect x="232" y="310" width="48" height="90" rx="6" fill="#ec4899"/>
+  <rect x="232" y="310" width="48" height="90" rx="6" fill="#fb923c"/>
   <circle cx="270" cy="358" r="3" fill="#fde047"/>
 
   <!-- 窓 -->
@@ -59,8 +59,8 @@
 
   <!-- 買い物バッグ -->
   <g transform="translate(355,335)">
-    <path d="M0 12 L60 12 L54 70 L6 70 Z" fill="#f472b6" stroke="#be185d" stroke-width="2"/>
-    <path d="M14 12 Q14 -8 30 -8 Q46 -8 46 12" fill="none" stroke="#be185d" stroke-width="3"/>
+    <path d="M0 12 L60 12 L54 70 L6 70 Z" fill="#fdba74" stroke="#c2410c" stroke-width="2"/>
+    <path d="M14 12 Q14 -8 30 -8 Q46 -8 46 12" fill="none" stroke="#c2410c" stroke-width="3"/>
     <text x="30" y="50" font-size="26" text-anchor="middle" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji">🥕</text>
   </g>
 </svg>
