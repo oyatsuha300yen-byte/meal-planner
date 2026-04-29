@@ -294,7 +294,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v29</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v30</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材だけで今日から3日分を作成">🎯 今日から3日</button>
@@ -1338,17 +1338,35 @@ function generateThreeDays(){
   // 厳格フィルタ：在庫だけで作れるもの
   const fullyStocked = available.filter(r => isFullyInStock(r, inv));
 
-  // 優先度：山本ゆり/ラクライフみほ風レシピを優先（PM推奨）
-  function recipePriority(r){
+  // 優先度：在庫消化を最優先、次に山本ゆり/ラクライフみほ系
+  function sourcePriority(r){
     const s = r.source || '';
     if(s.includes('山本ゆり')) return 3;
     if(s.includes('ラクライフみほ')) return 2;
     if(s === '家庭料理') return 1;
     return 0;
   }
-  const mains = fullyStocked.filter(r=>r.category==='main').sort((a,b)=>recipePriority(b)-recipePriority(a));
-  const subs  = fullyStocked.filter(r=>r.category==='sub').sort((a,b)=>recipePriority(b)-recipePriority(a));
-  const soups = fullyStocked.filter(r=>r.category==='soup').sort((a,b)=>recipePriority(b)-recipePriority(a));
+  // レシピが在庫の何品を使うか（常備調味料は除く＝冷蔵庫から減らせる食材だけ）
+  function invUseCount(r){
+    return r.ingredients.filter(ing =>
+      !isStaple(ing.n) && inv.some(x => ingredientMatchesInventory(ing.n, x))
+    ).length;
+  }
+  // 魚を含むかどうか
+  function hasFish(r){
+    return r.ingredients.some(ing => /鮭|サバ|鯖|ぶり|あじ|アジ|たら|サンマ|秋刀魚|しらす/.test(ing.n));
+  }
+
+  function rankBy(category){
+    return fullyStocked
+      .filter(r => r.category===category)
+      .map(r => ({r, useCount: invUseCount(r), srcP: sourcePriority(r)}))
+      .sort((a,b) => (b.useCount - a.useCount) || (b.srcP - a.srcP))
+      .map(x => x.r);
+  }
+  const mains = rankBy('main');
+  const subs  = rankBy('sub');
+  const soups = rankBy('soup');
 
   if(mains.length===0 || subs.length===0 || soups.length===0){
     const missing = [];
@@ -1364,10 +1382,25 @@ function generateThreeDays(){
   const startW = tp ? tp.w : STATE.currentWeek;
   const startD = tp ? tp.d : 0;
   const usedMain=new Set(), usedSub=new Set(), usedSoup=new Set();
-  function pickUnique(pool, used){
-    for(const r of pool){ if(!used.has(r.id)){used.add(r.id); return r;} }
-    return pool[0];
+  let fishUsed=0; // 3日間で魚は最大1回まで
+
+  function pickBest(pool, used, opts={}){
+    // 既に使った主要食材を控えめにしつつ、まだ使ってないものを優先
+    const remaining = pool.filter(r => !used.has(r.id));
+    if(remaining.length===0) return pool[0];
+    const scored = remaining.map(r => {
+      let score = invUseCount(r)*10 + sourcePriority(r);
+      // 魚は週1まで（既に1回出ていたら大幅減点）
+      if(opts.checkFish && hasFish(r) && fishUsed>=1) score -= 100;
+      return {r, score};
+    });
+    scored.sort((a,b)=>b.score-a.score);
+    const picked = scored[0].r;
+    used.add(picked.id);
+    if(hasFish(picked)) fishUsed++;
+    return picked;
   }
+
   for(let i=0;i<3;i++){
     const absDay = startD + i;
     const w = startW + Math.floor(absDay/7);
@@ -1375,9 +1408,9 @@ function generateThreeDays(){
     if(w>4) break; // 4週目を超えたら終了
     if(!STATE.plan['w'+w]) continue;
     STATE.plan['w'+w][d] = {
-      main: pickUnique(mains,usedMain).id,
-      sub:  pickUnique(subs,usedSub).id,
-      soup: pickUnique(soups,usedSoup).id,
+      main: pickBest(mains,usedMain,{checkFish:true}).id,
+      sub:  pickBest(subs,usedSub,{checkFish:true}).id,
+      soup: pickBest(soups,usedSoup,{checkFish:true}).id,
       feedback:{}, memo:'', extras:[]
     };
   }
