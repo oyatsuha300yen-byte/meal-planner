@@ -292,7 +292,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v25</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v26</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材優先で月〜水の3日分を作成">🎯 在庫で3日</button>
@@ -2382,6 +2382,40 @@ if(!store.get('restore_butter_v1',false)){
     store.set('inventory', STATE.inventory);
   }
   store.set('restore_butter_v1', true);
+}
+// v22の冷蔵庫の中身を完全復元（うみさんの実機状態に合わせる・1回のみ）
+if(!store.get('restore_v22_full_v1',false)){
+  const now = new Date().toISOString();
+  STATE.inventory = [
+    // 野菜・きのこ
+    {name:'きゅうり',  category:'野菜・きのこ', qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'レタス',    category:'野菜・きのこ', qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'ごぼう',    category:'野菜・きのこ', qty:2,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'もやし',    category:'野菜・きのこ', qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'玉ねぎ',    category:'野菜・きのこ', qty:4,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'じゃがいも',category:'野菜・きのこ', qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'白ネギ',    category:'野菜・きのこ', qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'小松菜',    category:'野菜・きのこ', qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'タケノコ',  category:'野菜・きのこ', qty:3,  unit:'個', step:1,  refill:false, addedAt:now},
+    // 肉・魚
+    {name:'豚肉',      category:'肉・魚',       qty:500,unit:'g',  step:100,refill:false, addedAt:now},
+    {name:'冷凍鮭',    category:'肉・魚',       qty:3,  unit:'個', step:1,  refill:false, addedAt:now},
+    // 卵・豆腐
+    {name:'豆腐',      category:'卵・豆腐',     qty:3,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'納豆',      category:'卵・豆腐',     qty:5,  unit:'個', step:1,  refill:false, addedAt:now},
+    // 乳製品
+    {name:'牛乳',      category:'乳製品',       qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'バター',    category:'乳製品',       qty:150,unit:'g',  step:10, refill:false, addedAt:now},
+    // 調味料
+    {name:'醤油',      category:'調味料',       qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'味噌',      category:'調味料',       qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'みりん',    category:'調味料',       qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'砂糖',      category:'調味料',       qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'塩',        category:'調味料',       qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+    {name:'酒',        category:'調味料',       qty:1,  unit:'個', step:1,  refill:false, addedAt:now},
+  ];
+  store.set('inventory', STATE.inventory);
+  store.set('restore_v22_full_v1', true);
 }
 if(!store.get('jumpedToToday',false)){
   const tp = findTodayIndex();
