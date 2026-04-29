@@ -292,7 +292,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v22</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v23</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材優先で月〜水の3日分を作成">🎯 在庫で3日</button>
@@ -954,7 +954,137 @@ const RECIPES = [
  steps:['豚肉・タケノコ・ピーマンを細切り','豚肉に下味と片栗粉','フライパンで炒めて調味'],
  hcMode:'',
  kidTip:'ピーマン細切りで食べやすく。辛味なしでOK。',
- hide:'',tags:['中華','主菜','タケノコ']}
+ hide:'',tags:['中華','主菜','タケノコ']},
+
+// ====== 山本ゆり風 簡単家庭料理（フライパン/鍋・時短） ======
+{id:'yuri_shogayaki',name:'豚肉と玉ねぎの生姜焼き',emoji:'🍳',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり風',time:15,servings:4,kcal:380,p:25,f:18,c:20,
+ ingredients:[{n:'豚肉',a:'400g',c:'肉類'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'醤油',a:'大3',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'しょうが',a:'1片',c:'調味料'},{n:'サラダ油',a:'小1',c:'調味料'}],
+ steps:['玉ねぎを薄切り、しょうがをすりおろす','調味料を全部混ぜてタレを作る','フライパンに油を熱し豚肉と玉ねぎを炒める','タレを加えて煮絡める'],
+ hcMode:'',
+ kidTip:'タレは甘めなので子供も食べやすい。豚肉は薄切りを選ぶと噛み切りやすい。',
+ hide:'',tags:['和食','定番','時短','人気']},
+
+{id:'yuri_butagobou',name:'豚肉とごぼうの甘辛炒め',emoji:'🥢',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり風',time:15,servings:4,kcal:340,p:22,f:14,c:25,
+ ingredients:[{n:'豚肉',a:'300g',c:'肉類'},{n:'ごぼう',a:'1本',c:'野菜'},{n:'醤油',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'酒',a:'大1',c:'調味料'},{n:'ごま油',a:'小1',c:'調味料'},{n:'白ごま',a:'適量',c:'調味料'}],
+ steps:['ごぼうはささがきにして水にさらす','フライパンにごま油を熱して豚肉を炒める','ごぼうを加えてしんなりするまで炒める','調味料を加えて煮絡め、白ごまを散らす'],
+ hcMode:'',
+ kidTip:'ごぼうは細めにささがきで食べやすく。甘辛味でご飯が進む。',
+ hide:'',tags:['和食','時短','根菜']},
+
+{id:'yuri_sake_butter',name:'鮭のバター醤油焼き',emoji:'🐟',category:'main',tool:'stove',cuisine:'洋食',source:'山本ゆり風',time:10,servings:4,kcal:320,p:28,f:18,c:5,
+ ingredients:[{n:'鮭',a:'4切',c:'魚介'},{n:'バター',a:'30g',c:'乳製品'},{n:'醤油',a:'大1',c:'調味料'},{n:'塩こしょう',a:'少々',c:'調味料'},{n:'小麦粉',a:'適量',c:'調味料'}],
+ steps:['鮭に塩こしょうを振り、小麦粉を薄くまぶす','フライパンにバターを熱し鮭を皮目から焼く','両面こんがり焼いたら醤油を回しかける','バターと醤油の香りをまとわせて完成'],
+ hcMode:'',
+ kidTip:'バターのコクで魚嫌いの子も食べやすい。皮はパリっと焼くと美味しい。',
+ hide:'',tags:['洋食','時短','魚','人気']},
+
+{id:'yuri_butaretasu',name:'豚肉とレタスの重ね蒸し',emoji:'🥬',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり風',time:15,servings:4,kcal:300,p:22,f:14,c:8,
+ ingredients:[{n:'豚肉',a:'300g',c:'肉類'},{n:'レタス',a:'1/2玉',c:'野菜'},{n:'もやし',a:'1袋',c:'野菜'},{n:'酒',a:'大2',c:'調味料'},{n:'醤油',a:'大2',c:'調味料'},{n:'ごま油',a:'小1',c:'調味料'},{n:'にんにくチューブ',a:'2cm',c:'調味料'}],
+ steps:['レタスをちぎり、もやしと一緒にフライパンに敷く','上に豚肉を広げて並べる','酒を回しかけて蓋をして蒸し焼き5分','醤油・ごま油・にんにくを混ぜたタレをかける'],
+ hcMode:'',
+ kidTip:'蒸すから油控えめでヘルシー。タレを別添えにすれば子供は塩のみでもOK。',
+ hide:'',tags:['和食','時短','蒸し']},
+
+{id:'yuri_chashu_pan',name:'フライパンチャーシュー',emoji:'🥩',category:'main',tool:'stove',cuisine:'中華',source:'山本ゆり風',time:25,servings:4,kcal:420,p:25,f:22,c:18,
+ ingredients:[{n:'豚肉',a:'400g',c:'肉類'},{n:'長ねぎ',a:'1本',c:'野菜'},{n:'醤油',a:'大4',c:'調味料'},{n:'砂糖',a:'大3',c:'調味料'},{n:'酒',a:'大3',c:'調味料'},{n:'水',a:'100ml',c:'調味料'},{n:'しょうが',a:'1片',c:'調味料'}],
+ steps:['豚肉を厚めに切る','長ねぎを斜め切り、しょうがを薄切り','フライパンに豚肉と全調味料を入れる','蓋をして弱火で15分煮込む。タレが煮詰まれば完成'],
+ hcMode:'',
+ kidTip:'柔らかく煮込むので食べやすい。タレはご飯にかけても◎',
+ hide:'',tags:['中華','人気','作り置き']},
+
+// ====== ラクライフみほ風 子供が喜ぶ時短料理 ======
+{id:'miho_sake_foil',name:'鮭と玉ねぎのホイル焼き',emoji:'📦',category:'main',tool:'stove',cuisine:'洋食',source:'ラクライフみほ風',time:20,servings:4,kcal:280,p:26,f:14,c:8,
+ ingredients:[{n:'鮭',a:'4切',c:'魚介'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'バター',a:'20g',c:'乳製品'},{n:'醤油',a:'大1',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'塩こしょう',a:'少々',c:'調味料'}],
+ steps:['玉ねぎを薄切り','アルミホイルに玉ねぎ・鮭・バターを乗せる','酒・醤油・塩こしょうをかけて包む','フライパンに並べ蓋をして中弱火10分蒸し焼き'],
+ hcMode:'',
+ kidTip:'包むだけで子供にも見た目楽しい。バター醤油で食べやすい。',
+ hide:'',tags:['洋食','時短','蒸し','子供向け']},
+
+{id:'miho_butajaga_pan',name:'フライパン肉じゃが',emoji:'🥘',category:'main',tool:'stove',cuisine:'和食',source:'ラクライフみほ風',time:20,servings:4,kcal:380,p:18,f:12,c:50,
+ ingredients:[{n:'豚肉',a:'250g',c:'肉類'},{n:'じゃがいも',a:'2個',c:'野菜'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'醤油',a:'大3',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'砂糖',a:'大1',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'水',a:'150ml',c:'調味料'}],
+ steps:['じゃがいもと玉ねぎを一口大に切る','フライパンで豚肉を炒める','じゃがいも・玉ねぎを加えてさっと炒める','調味料と水を加えて蓋をし中火15分煮る'],
+ hcMode:'',
+ kidTip:'じゃがいもホクホクで子供に人気。にんじんがあれば追加で彩り◎',
+ hide:'',tags:['和食','定番','時短']},
+
+{id:'miho_take_butter',name:'タケノコのバター醤油炒め',emoji:'🎍',category:'sub',tool:'stove',cuisine:'和食',source:'ラクライフみほ風',time:8,servings:4,kcal:120,p:3,f:8,c:10,
+ ingredients:[{n:'タケノコ',a:'1個',c:'野菜'},{n:'バター',a:'15g',c:'乳製品'},{n:'醤油',a:'大1',c:'調味料'}],
+ steps:['タケノコを薄切り','フライパンにバターを熱しタケノコを炒める','醤油を回しかけて香ばしく炒める'],
+ hcMode:'',
+ kidTip:'バターの香りで食べやすい。歯ごたえ楽しめる副菜。',
+ hide:'',tags:['和食','時短','副菜']},
+
+// ====== 在庫即活用 副菜（5品） ======
+{id:'sub_moyashi_namul',name:'もやしのナムル',emoji:'🌱',category:'sub',tool:'stove',cuisine:'韓国',source:'家庭料理',time:5,servings:4,kcal:60,p:3,f:4,c:5,
+ ingredients:[{n:'もやし',a:'1袋',c:'野菜'},{n:'ごま油',a:'大1',c:'調味料'},{n:'塩',a:'小1/2',c:'調味料'},{n:'にんにくチューブ',a:'1cm',c:'調味料'},{n:'白ごま',a:'適量',c:'調味料'}],
+ steps:['もやしをさっと茹でる（30秒）','水気をしっかり切る','調味料を全部混ぜて和える'],
+ hcMode:'',
+ kidTip:'にんにく抜きでもOK。さっぱりで子供も食べやすい。',
+ hide:'',tags:['韓国','副菜','時短','5分']},
+
+{id:'sub_kyuri_asazuke',name:'きゅうりの即席漬け',emoji:'🥒',category:'sub',tool:'stove',cuisine:'和食',source:'家庭料理',time:5,servings:4,kcal:25,p:1,f:0,c:5,
+ ingredients:[{n:'きゅうり',a:'2本',c:'野菜'},{n:'塩',a:'小1/2',c:'調味料'},{n:'ごま油',a:'小1',c:'調味料'},{n:'白ごま',a:'適量',c:'調味料'}],
+ steps:['きゅうりを乱切り','塩をふってもみ5分置く','水気を絞ってごま油・白ごまで和える'],
+ hcMode:'',
+ kidTip:'シャキッと食感で子供も喜ぶ。塩控えめで。',
+ hide:'',tags:['和食','副菜','時短','5分']},
+
+{id:'sub_komatsuna_shirasu',name:'小松菜のおひたし',emoji:'🥬',category:'sub',tool:'stove',cuisine:'和食',source:'家庭料理',time:8,servings:4,kcal:30,p:2,f:0,c:4,
+ ingredients:[{n:'小松菜',a:'1束',c:'野菜'},{n:'醤油',a:'小2',c:'調味料'},{n:'みりん',a:'小1',c:'調味料'},{n:'白ごま',a:'適量',c:'調味料'}],
+ steps:['小松菜をさっと茹でる（1分）','冷水で締めて水気を絞る','3cm長さに切り調味料で和える'],
+ hcMode:'',
+ kidTip:'やわらかい部分を選ぶと子供も食べやすい。',
+ hide:'',tags:['和食','副菜','時短']},
+
+{id:'sub_negi_yaki',name:'白ねぎの照り焼き',emoji:'🌿',category:'sub',tool:'stove',cuisine:'和食',source:'家庭料理',time:8,servings:4,kcal:80,p:1,f:3,c:10,
+ ingredients:[{n:'白ねぎ',a:'2本',c:'野菜'},{n:'醤油',a:'大1',c:'調味料'},{n:'みりん',a:'大1',c:'調味料'},{n:'砂糖',a:'小1',c:'調味料'},{n:'サラダ油',a:'小1',c:'調味料'}],
+ steps:['白ねぎを3cm長さに切る','フライパンに油を熱し焼き目をつける','調味料を混ぜて回しかけ照りを出す'],
+ hcMode:'',
+ kidTip:'甘辛タレでねぎが食べやすくなる。',
+ hide:'',tags:['和食','副菜','時短']},
+
+{id:'sub_natto_simple',name:'納豆',emoji:'🫘',category:'sub',tool:'stove',cuisine:'和食',source:'家庭料理',time:1,servings:4,kcal:100,p:8,f:5,c:6,
+ ingredients:[{n:'納豆',a:'4パック',c:'卵・豆腐'}],
+ steps:['納豆をよく混ぜる','付属のタレと辛子を加える'],
+ hcMode:'',
+ kidTip:'辛子なしで。発酵食品で腸活にも◎',
+ hide:'',tags:['和食','副菜','時短','1分']},
+
+// ====== 在庫即活用 汁物（5品） ======
+{id:'soup_negi_tofu',name:'白ねぎと豆腐の味噌汁',emoji:'🍵',category:'soup',tool:'stove',cuisine:'和食',source:'家庭料理',time:10,servings:4,kcal:80,p:6,f:3,c:6,
+ ingredients:[{n:'白ねぎ',a:'1/2本',c:'野菜'},{n:'豆腐',a:'1/2丁',c:'卵・豆腐'},{n:'味噌',a:'大2',c:'調味料'},{n:'だし',a:'500ml',c:'調味料'}],
+ steps:['だしを温める','豆腐をさいの目に切り、白ねぎを小口切りに','豆腐とねぎを入れひと煮立ち','火を止めて味噌を溶く'],
+ hcMode:'',
+ kidTip:'定番味噌汁。豆腐は柔らかく食べやすい。',
+ hide:'',tags:['和食','汁物','定番']},
+
+{id:'soup_komatsuna_tama',name:'小松菜と玉ねぎの味噌汁',emoji:'🍵',category:'soup',tool:'stove',cuisine:'和食',source:'家庭料理',time:10,servings:4,kcal:60,p:3,f:1,c:8,
+ ingredients:[{n:'小松菜',a:'1/2束',c:'野菜'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'味噌',a:'大2',c:'調味料'},{n:'だし',a:'500ml',c:'調味料'}],
+ steps:['玉ねぎを薄切り、小松菜をざく切り','だしで玉ねぎを煮る','小松菜を加えてさっと煮る','味噌を溶いて完成'],
+ hcMode:'',
+ kidTip:'野菜たっぷりで栄養◎',
+ hide:'',tags:['和食','汁物']},
+
+{id:'soup_take_tofu',name:'豆腐とタケノコの味噌汁',emoji:'🍵',category:'soup',tool:'stove',cuisine:'和食',source:'家庭料理',time:10,servings:4,kcal:70,p:5,f:2,c:7,
+ ingredients:[{n:'タケノコ',a:'1個',c:'野菜'},{n:'豆腐',a:'1/2丁',c:'卵・豆腐'},{n:'味噌',a:'大2',c:'調味料'},{n:'だし',a:'500ml',c:'調味料'}],
+ steps:['タケノコを薄切り、豆腐をさいの目に','だしでタケノコを煮る','豆腐を加えてひと煮立ち','味噌を溶いて完成'],
+ hcMode:'',
+ kidTip:'タケノコの食感が楽しい。',
+ hide:'',tags:['和食','汁物','春']},
+
+{id:'soup_moyashi_tofu',name:'もやしと豆腐の味噌汁',emoji:'🍵',category:'soup',tool:'stove',cuisine:'和食',source:'家庭料理',time:8,servings:4,kcal:60,p:4,f:2,c:6,
+ ingredients:[{n:'もやし',a:'1/2袋',c:'野菜'},{n:'豆腐',a:'1/2丁',c:'卵・豆腐'},{n:'味噌',a:'大2',c:'調味料'},{n:'だし',a:'500ml',c:'調味料'}],
+ steps:['豆腐をさいの目に','だしでもやしと豆腐を煮る','味噌を溶いて完成'],
+ hcMode:'',
+ kidTip:'シャキッともやし食感。',
+ hide:'',tags:['和食','汁物','時短']},
+
+{id:'soup_tonjiru',name:'豚汁',emoji:'🥣',category:'soup',tool:'stove',cuisine:'和食',source:'家庭料理',time:20,servings:4,kcal:180,p:12,f:8,c:15,
+ ingredients:[{n:'豚肉',a:'150g',c:'肉類'},{n:'玉ねぎ',a:'1/2個',c:'野菜'},{n:'じゃがいも',a:'1個',c:'野菜'},{n:'ごぼう',a:'1/2本',c:'野菜'},{n:'味噌',a:'大3',c:'調味料'},{n:'だし',a:'700ml',c:'調味料'},{n:'ごま油',a:'小1',c:'調味料'}],
+ steps:['ごぼうをささがき、玉ねぎを薄切り、じゃがいもを一口大','鍋にごま油で豚肉を炒める','野菜を加えて炒め、だしを注いで煮る','じゃがいもが柔らかくなったら味噌を溶く'],
+ hcMode:'',
+ kidTip:'具だくさんで栄養満点。じゃがいもホクホク。',
+ hide:'',tags:['和食','汁物','定番','人気']}
 ];
 
 /* ==============================
@@ -1060,14 +1190,81 @@ function save(){
 /* ==============================
    献立自動生成
    ============================== */
+
+// 常備調味料（在庫チェック対象外＝常に「ある」とみなす）
+const STAPLE_INGREDIENTS = [
+  '醤油','しょうゆ','味噌','みそ','みりん','砂糖','塩','酒',
+  '水','サラダ油','油','ごま油','オリーブ油','オリーブオイル',
+  '小麦粉','片栗粉','こしょう','胡椒','塩こしょう',
+  'だし','顆粒だし','和風だし','ほんだし','本だし','和風顆粒だし',
+  'にんにく','しょうが','生姜','にんにくチューブ','しょうがチューブ',
+  '酢','米酢','穀物酢','黒酢','ポン酢',
+  'ごま','白ごま','黒ごま','すりごま','いりごま',
+];
+
+// 食材クラス（同じグループはマッチ扱い：豚肉⇔豚バラ⇔豚こま、鶏肉⇔鶏もも など）
+const INGREDIENT_CLASSES = [
+  ['豚','ぶた'],
+  ['鶏','とり','チキン'],
+  ['牛','ぎゅう','ビーフ'],
+  ['ひき肉','挽肉','ミンチ','合いびき'],
+  ['鮭','サーモン','しゃけ','銀鮭','紅鮭'],
+  ['鯖','さば','サバ'],
+  ['秋刀魚','さんま','サンマ'],
+  ['玉ねぎ','たまねぎ','タマネギ','玉葱'],
+  ['にんじん','人参','ニンジン'],
+  ['じゃがいも','ジャガイモ','馬鈴薯','じゃが芋'],
+  ['キャベツ','きゃべつ'],
+  ['白菜','はくさい','ハクサイ'],
+  ['ねぎ','長ねぎ','青ねぎ','白ねぎ','ネギ','長ネギ','白ネギ','青ネギ','長葱'],
+  ['しめじ','エリンギ','エノキ','えのき','まいたけ','マイタケ','しいたけ','椎茸'],
+  ['卵','たまご','タマゴ','玉子'],
+  ['豆腐','とうふ','トウフ','絹豆腐','木綿豆腐'],
+  ['きゅうり','胡瓜','キュウリ'],
+  ['レタス','れたす'],
+  ['もやし','モヤシ','緑豆もやし'],
+  ['小松菜','こまつな','コマツナ'],
+  ['ほうれん草','ほうれんそう','ホウレンソウ'],
+  ['ごぼう','牛蒡','ゴボウ'],
+  ['たけのこ','タケノコ','筍'],
+  ['納豆','なっとう','ナットウ'],
+  ['牛乳','ぎゅうにゅう','ミルク'],
+  ['バター','ばたー'],
+];
+
+function isStaple(name){
+  return STAPLE_INGREDIENTS.some(s => name.includes(s) || s.includes(name));
+}
+
+// 食材名と在庫アイテムが「同じ食材」として扱えるか
+function ingredientMatchesInventory(ingName, invItem){
+  // 完全一致 or 部分一致
+  if(ingName.includes(invItem) || invItem.includes(ingName)) return true;
+  // クラス（食材グループ）一致
+  for(const cls of INGREDIENT_CLASSES){
+    const ingMatches = cls.some(c => ingName.includes(c));
+    const invMatches = cls.some(c => invItem.includes(c));
+    if(ingMatches && invMatches) return true;
+  }
+  return false;
+}
+
+// 在庫＋常備調味料だけで作れるか
+function isFullyInStock(recipe, inv){
+  return recipe.ingredients.every(ing => {
+    if(isStaple(ing.n)) return true;
+    return inv.some(x => ingredientMatchesInventory(ing.n, x));
+  });
+}
+
 function isExcluded(recipe){
   return recipe.ingredients.some(ing=>
     EXCLUDED_INGREDIENTS.some(ex=>ing.n.includes(ex))
   );
 }
 function invMatchCount(recipe,inv){
-  return recipe.ingredients.filter(ing=>
-    inv.some(x=>ing.n.includes(x)||x.includes(ing.n))
+  return recipe.ingredients.filter(ing =>
+    isStaple(ing.n) || inv.some(x => ingredientMatchesInventory(ing.n, x))
   ).length;
 }
 
@@ -1128,6 +1325,7 @@ function generatePlan(opts={}){
 }
 
 // 在庫で3日分だけ生成（現在週の月〜水を上書き、残りは既存のまま）
+// 厳格モード：在庫＋常備調味料だけで作れるレシピのみ採用
 function generateThreeDays(){
   const inv = invHaveNames();
   if(inv.length===0){
@@ -1135,9 +1333,20 @@ function generateThreeDays(){
     return;
   }
   const available = RECIPES.filter(r=>!isExcluded(r));
-  const mains = available.filter(r=>r.category==='main').sort((a,b)=>invMatchCount(b,inv)-invMatchCount(a,inv));
-  const subs  = available.filter(r=>r.category==='sub').sort((a,b)=>invMatchCount(b,inv)-invMatchCount(a,inv));
-  const soups = available.filter(r=>r.category==='soup').sort((a,b)=>invMatchCount(b,inv)-invMatchCount(a,inv));
+  // 厳格フィルタ：在庫だけで作れるもの
+  const fullyStocked = available.filter(r => isFullyInStock(r, inv));
+  const mains = fullyStocked.filter(r=>r.category==='main');
+  const subs  = fullyStocked.filter(r=>r.category==='sub');
+  const soups = fullyStocked.filter(r=>r.category==='soup');
+
+  if(mains.length===0 || subs.length===0 || soups.length===0){
+    const missing = [];
+    if(mains.length===0) missing.push('主菜');
+    if(subs.length===0) missing.push('副菜');
+    if(soups.length===0) missing.push('汁物');
+    alert(`在庫だけで作れる${missing.join('・')}のレシピが足りません。\n冷蔵庫の食材を増やすか、レシピを追加してください。`);
+    return;
+  }
 
   const week = STATE.plan['w'+STATE.currentWeek];
   const usedMain=new Set(), usedSub=new Set(), usedSoup=new Set();
@@ -1156,10 +1365,19 @@ function generateThreeDays(){
   save();
 }
 
+// 1日分だけ再生成（在庫優先・除外考慮）
 function regenDay(w,d){
-  const mains = RECIPES.filter(r=>r.category==='main');
-  const subs = RECIPES.filter(r=>r.category==='sub');
-  const soups = RECIPES.filter(r=>r.category==='soup');
+  const inv = invHaveNames();
+  const available = RECIPES.filter(r=>!isExcluded(r));
+  // 在庫があれば厳格フィルタ、なければ全レシピから
+  const pool = inv.length>0 ? available.filter(r=>isFullyInStock(r,inv)) : available;
+  let mains = pool.filter(r=>r.category==='main');
+  let subs  = pool.filter(r=>r.category==='sub');
+  let soups = pool.filter(r=>r.category==='soup');
+  // フォールバック：いずれかが空なら全レシピから補う
+  if(mains.length===0) mains = available.filter(r=>r.category==='main');
+  if(subs.length===0)  subs  = available.filter(r=>r.category==='sub');
+  if(soups.length===0) soups = available.filter(r=>r.category==='soup');
   STATE.plan['w'+w][d] = {
     main: mains[Math.floor(Math.random()*mains.length)].id,
     sub: subs[Math.floor(Math.random()*subs.length)].id,
