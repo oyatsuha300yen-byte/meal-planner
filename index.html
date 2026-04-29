@@ -292,10 +292,10 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v26</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v27</div>
     </div>
     <div style="display:flex;gap:6px">
-      <button class="header-btn" id="btn-3days" title="在庫にある食材優先で月〜水の3日分を作成">🎯 在庫で3日</button>
+      <button class="header-btn" id="btn-3days" title="在庫にある食材だけで今日から3日分を作成">🎯 今日から3日</button>
       <button class="header-btn" id="btn-regen">🔄 再作成</button>
     </div>
   </div>
@@ -1324,7 +1324,7 @@ function generatePlan(opts={}){
   save();
 }
 
-// 在庫で3日分だけ生成（現在週の月〜水を上書き、残りは既存のまま）
+// 在庫で3日分生成（今日を含めた3日間を上書き、週またぎ対応）
 // 厳格モード：在庫＋常備調味料だけで作れるレシピのみ採用
 function generateThreeDays(){
   const inv = invHaveNames();
@@ -1357,20 +1357,30 @@ function generateThreeDays(){
     return;
   }
 
-  const week = STATE.plan['w'+STATE.currentWeek];
+  // 今日を含めた3日間を上書き（週をまたぐ場合も対応）
+  const tp = findTodayIndex();
+  const startW = tp ? tp.w : STATE.currentWeek;
+  const startD = tp ? tp.d : 0;
   const usedMain=new Set(), usedSub=new Set(), usedSoup=new Set();
   function pickUnique(pool, used){
     for(const r of pool){ if(!used.has(r.id)){used.add(r.id); return r;} }
     return pool[0];
   }
   for(let i=0;i<3;i++){
-    week[i] = {
+    const absDay = startD + i;
+    const w = startW + Math.floor(absDay/7);
+    const d = absDay % 7;
+    if(w>4) break; // 4週目を超えたら終了
+    if(!STATE.plan['w'+w]) continue;
+    STATE.plan['w'+w][d] = {
       main: pickUnique(mains,usedMain).id,
       sub:  pickUnique(subs,usedSub).id,
       soup: pickUnique(soups,usedSoup).id,
       feedback:{}, memo:'', extras:[]
     };
   }
+  // 表示も今日にジャンプ
+  if(tp){ STATE.currentWeek = tp.w; STATE.currentDay = tp.d; }
   save();
 }
 
@@ -2332,8 +2342,8 @@ document.getElementById('btn-regen').onclick=()=>{
     {generatePlan();render();}
 };
 document.getElementById('btn-3days').onclick=()=>{
-  if(confirm('冷蔵庫の食材を優先して月〜水の3日分を作成します。よろしいですか？'))
-    {generateThreeDays();STATE.currentDay=0;save();render();}
+  if(confirm('冷蔵庫の食材だけで今日から3日分を作成します。よろしいですか？'))
+    {generateThreeDays();save();render();}
 };
 
 /* ==============================
