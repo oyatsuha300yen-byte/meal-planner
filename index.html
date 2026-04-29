@@ -95,10 +95,11 @@ main{padding:12px}
 .pfc .c::before{color:var(--g)}
 
 /* Inventory */
-.input-row{display:flex;gap:8px;margin-bottom:10px}
-.input-row input{flex:1;padding:10px 12px;border:2px solid var(--gray-border);border-radius:10px;outline:none}
+.input-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;min-width:0}
+.input-row input{flex:1 1 100%;min-width:0;padding:10px 12px;border:2px solid var(--gray-border);border-radius:10px;outline:none}
 .input-row input:focus{border-color:var(--g)}
-.input-row button{padding:10px 18px;background:var(--g);color:#fff;border-radius:10px;font-weight:700}
+.input-row select{flex:1 1 0;min-width:0;max-width:60%}
+.input-row button{padding:10px 18px;background:var(--g);color:#fff;border-radius:10px;font-weight:700;flex-shrink:0}
 
 .chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:20px;background:var(--gray-light);font-size:13px;border:1px solid var(--gray-border)}
@@ -121,10 +122,10 @@ main{padding:12px}
 .inv-search input{width:100%;padding:10px 14px;border:1.5px solid var(--gray-border);border-radius:10px;outline:none;font-size:14px;background:#fff}
 .inv-search input:focus{border-color:var(--g)}
 .inv-summary{display:flex;gap:14px;font-size:13px;color:var(--text-sub);margin-bottom:10px;padding:0 4px}
-.cat-group{margin-bottom:14px;background:#fff;border-radius:10px;padding:10px 10px 12px;border:1px solid var(--gray-border)}
+.cat-group{margin-bottom:14px;background:#fff;border-radius:10px;padding:10px 10px 12px;border:1px solid var(--gray-border);max-width:100%;overflow:hidden}
 .cat-head{font-weight:700;font-size:14px;margin-bottom:10px}
 .cat-count{color:var(--text-sub);font-weight:400;font-size:12px;margin-left:4px}
-.inv-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:8px}
+.inv-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;width:100%}
 .inv-card{position:relative;background:#fff;border:2px solid var(--o);border-radius:12px;padding:10px 8px 8px;text-align:center}
 .inv-card.qty-zero{border-color:#fca5a5;background:#fef2f2;opacity:.85}
 .inv-card.refill-on{border-color:var(--o);background:#fff7ed}
@@ -293,7 +294,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v28</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v29</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材だけで今日から3日分を作成">🎯 今日から3日</button>
