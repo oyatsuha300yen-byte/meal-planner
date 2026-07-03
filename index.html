@@ -294,7 +294,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v34</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v35</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材だけで今日から3日分を作成">🧊 3日</button>
@@ -1008,6 +1008,48 @@ const RECIPES = [
  hcMode:'',
  kidTip:'揚げない酢豚。肉団子みたいで子どもが食べやすい。',
  hide:'ピーマンは細めに切ると気にならない',tags:['中華','人気','山本ゆり']},
+
+{id:'yuri_umadare_moyashi',name:'うまだれ豚こまもやし',emoji:'🌱',category:'main',tool:'stove',cuisine:'中華',source:'山本ゆり',sourceUrl:'https://www.lettuceclub.net/recipe/dish/37991/',time:10,servings:4,kcal:363,p:22,f:20,c:20,
+ ingredients:[{n:'豚こま肉',a:'400g',c:'肉類'},{n:'もやし',a:'2袋',c:'野菜'},{n:'片栗粉',a:'大2',c:'調味料'},{n:'砂糖',a:'大2',c:'調味料'},{n:'醤油',a:'大2',c:'調味料'},{n:'酢',a:'大2',c:'調味料'},{n:'味噌',a:'小2',c:'調味料'},{n:'白すりごま',a:'小2',c:'調味料'}],
+ steps:['フライパンにもやしと水を入れ中火、沸騰したらざるで水切りして器に盛る','豚肉に片栗粉をまぶす','同じフライパンに油を熱し豚肉を炒める','色が変わったら合わせ調味料（砂糖・醤油・酢・味噌・すりごま・にんにく/しょうが少々）を絡め、もやしにたれごとかける'],
+ hcMode:'',
+ kidTip:'甘辛だれでもやしがもりもり食べられる。',
+ hide:'',tags:['中華','時短','山本ゆり']},
+
+{id:'yuri_butakoma_teri',name:'レンジで豚こまと玉ねぎの照り炒め',emoji:'🍖',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',sourceUrl:'https://www.lettuceclub.net/recipe/dish/25755/',time:10,servings:4,kcal:339,p:22,f:16,c:24,
+ ingredients:[{n:'豚こま肉',a:'400g',c:'肉類'},{n:'玉ねぎ',a:'1個',c:'野菜'},{n:'片栗粉',a:'大2',c:'調味料'},{n:'醤油',a:'大4',c:'調味料'},{n:'砂糖',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'酢',a:'小2',c:'調味料'}],
+ steps:['玉ねぎを縦薄切りにし、豚肉に片栗粉をまぶす','耐熱皿に玉ねぎを敷いて豚肉をのせる','混ぜた甘辛だれをかけ、ラップをしてレンジ600Wで約4分30秒×2回（4人分）','よく混ぜて器に盛る'],
+ hcMode:'レンジ600W',
+ kidTip:'火を使わない。照り焼き味でご飯が進む。',
+ hide:'',tags:['和食','レンジ','時短','山本ゆり']},
+
+{id:'yuri_shiodare_chicken',name:'塩だれチキン',emoji:'🍗',category:'main',tool:'stove',cuisine:'その他',source:'山本ゆり',sourceUrl:'https://www.lettuceclub.net/recipe/dish/25768/',time:15,servings:4,kcal:227,p:20,f:14,c:6,
+ ingredients:[{n:'鶏手羽元',a:'8本',c:'肉類'},{n:'にんにく',a:'小1/2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'鶏ガラスープの素',a:'小2',c:'調味料'},{n:'ごま油',a:'小2',c:'調味料'},{n:'塩こしょう',a:'適量',c:'調味料'}],
+ steps:['手羽元にフォークで穴を開け、下味をもみ込んで5分置く','耐熱皿に並べラップをしてレンジで約3分×2回加熱','フライパンに油を熱し、全面こんがりするまで焼く'],
+ hcMode:'レンジ→フライパン',
+ kidTip:'骨付きだけど塩味シンプルで食べやすい。',
+ hide:'',tags:['時短','山本ゆり']},
+
+{id:'yuri_chapchae',name:'レンジで一発！ひき肉のチャプチェ風',emoji:'🍝',category:'main',tool:'stove',cuisine:'その他',source:'山本ゆり',sourceUrl:'https://www.lettuceclub.net/recipe/dish/25751/',time:15,servings:4,kcal:276,p:14,f:12,c:28,
+ ingredients:[{n:'合いびき肉',a:'200g',c:'肉類'},{n:'にら',a:'2/3わ',c:'野菜'},{n:'にんじん',a:'2/3本',c:'野菜'},{n:'春雨',a:'80g',c:'その他'},{n:'醤油',a:'大4',c:'調味料'},{n:'砂糖',a:'大3',c:'調味料'},{n:'ごま油',a:'小2',c:'調味料'},{n:'鶏ガラスープの素',a:'小1',c:'調味料'},{n:'片栗粉',a:'小2',c:'調味料'}],
+ steps:['にらを5cm、にんじんを細切りにする','春雨を水にくぐらせ耐熱ボウルへ。ひき肉・野菜をのせ合わせ調味料＋水260mlをかける','ラップをしてレンジ600Wで約6分×2回（4人分）','水溶き片栗粉を混ぜてとろみをつける'],
+ hcMode:'レンジ600W',
+ kidTip:'春雨がつるつるで子どもに人気。',
+ hide:'にんじんは細切りで気にならない',tags:['レンジ','時短','山本ゆり']},
+
+{id:'yuri_torishio_daikon',name:'とり塩大根',emoji:'🥘',category:'main',tool:'stove',cuisine:'和食',source:'山本ゆり',sourceUrl:'https://www.lettuceclub.net/recipe/dish/40343/',time:20,servings:4,kcal:367,p:26,f:20,c:16,
+ ingredients:[{n:'鶏もも肉',a:'2枚(600g)',c:'肉類'},{n:'大根',a:'2/3本',c:'野菜'},{n:'鶏ガラスープの素',a:'大2',c:'調味料'},{n:'酒',a:'大2',c:'調味料'},{n:'みりん',a:'大2',c:'調味料'},{n:'ごま油',a:'適量',c:'調味料'},{n:'塩こしょう',a:'適量',c:'調味料'}],
+ steps:['大根を1cm厚の半月切り、鶏肉を一口大に切って塩こしょう','フライパンにごま油を熱し鶏肉を焼き、大根を加えて炒める','調味料と水2カップを入れ、落としぶたをして約10分煮る','塩こしょうで味を調える'],
+ hcMode:'',
+ kidTip:'塩味の煮物で大根がやわらか。',
+ hide:'',tags:['和食','煮物','山本ゆり']},
+
+{id:'yuri_moyashi_wakame_soup',name:'もやしとわかめの中華スープ',emoji:'🍲',category:'soup',tool:'stove',cuisine:'中華',source:'山本ゆり',sourceUrl:'https://www.lettuceclub.net/recipe/dish/23646/',time:5,servings:4,kcal:27,p:2,f:1,c:3,
+ ingredients:[{n:'もやし',a:'2/3袋',c:'野菜'},{n:'カットわかめ',a:'小1',c:'その他'},{n:'鶏ガラスープの素',a:'小4',c:'調味料'},{n:'ごま油',a:'小1',c:'調味料'},{n:'白いりごま',a:'適量',c:'調味料'}],
+ steps:['鍋に水4カップとスープの素を入れ中火にかける','沸騰したらわかめともやしを加え約2分煮る','ごま油を加え、器に盛ってごまをふる'],
+ hcMode:'',
+ kidTip:'5分で完成。あっさり中華味。',
+ hide:'',tags:['中華','スープ','時短','山本ゆり']},
 
 // ====== ラクライフみほ風 子供が喜ぶ時短料理 ======
 {id:'miho_sake_foil',name:'鮭と玉ねぎのホイル焼き',emoji:'📦',category:'main',tool:'stove',cuisine:'洋食',source:'ラクライフみほ風',sourceUrl:'https://www.instagram.com/rakulife_miho/',time:20,servings:4,kcal:280,p:26,f:14,c:8,
