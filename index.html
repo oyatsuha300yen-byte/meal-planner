@@ -294,7 +294,7 @@ details.sim[open] summary{margin-bottom:8px}
   <div class="header-row">
     <div>
       <h1>🍱 家族の献立プランナー</h1>
-      <div style="font-size:10px;opacity:.7;margin-top:2px">v33</div>
+      <div style="font-size:10px;opacity:.7;margin-top:2px">v34</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="header-btn" id="btn-3days" title="在庫にある食材だけで今日から3日分を作成">🧊 3日</button>
@@ -2396,41 +2396,7 @@ document.getElementById('btn-stock-week').onclick=()=>{
 /* ==============================
    初期化
    ============================== */
-if(!store.get('seed_2026_04_23_v6',false)){
-  // 既存アイテムを場所＋ステータス形式に移行
-  STATE.inventory.forEach(it=>{
-    if(!it.location) it.location = inferLocation(it.name);
-    if(!it.status) it.status = 'have';
-  });
-  const seed = [
-    'きゅうり','レタス','豆腐','タケノコ',
-    'ごぼう','もやし','玉ねぎ','じゃがいも','にんじん','キャベツ','白ネギ','小松菜','えのき',
-    '豚肉','合いびき肉','冷凍鮭',
-    '牛乳','バター','納豆','しらす',
-    '醤油','味噌','みりん','砂糖','塩'
-  ];
-  const now = new Date().toISOString();
-  seed.forEach(n=>{
-    if(!STATE.inventory.some(x=>x.name===n)){
-      STATE.inventory.push({name:n, location:inferLocation(n), status:'have', addedAt:now});
-    }
-  });
-  store.set('inventory', STATE.inventory);
-  if(!STATE.plan) generatePlan();
-  // 在庫ベースで1週目を厳選献立に差し替え（カレー日は汁物なし・和洋中バランス）
-  const curated = [
-    {main:'shake-mune',     sub:'coleslaw',      soup:'minestrone'},    // 月 洋（魚は週1・買い物直後）
-    {main:'buta-shogayaki', sub:'wakatake-ni',   soup:'kenchin'},       // 火 和（筍）
-    {main:'tofu-steak',     sub:'moyashi-namul', soup:'tonjiru'},       // 水 和
-    {main:'keema',          sub:'haruharu',      soup:'nosoup'},        // 木 カレー
-    {main:'teriyaki',       sub:'chikuzenni',    soup:'asari-miso'},    // 金 和（筍）
-    {main:'napolitan',      sub:'macaroni-salad',soup:'kabocha-soup'},  // 土 洋
-    {main:'chinjao',        sub:'tofu-hiya',     soup:'wakame-soup'},   // 日 中（筍・豚肉）
-  ];
-  STATE.plan['w1'] = curated.map(c=>({...c, feedback:{}, memo:'', extras:[]}));
-  save();
-  store.set('seed_2026_04_23_v6', true);
-}
+// （旧シード処理は撤去済み。初期在庫は restore_v22_full_v1 ブロックが担当）
 if(!STATE.plan) generatePlan();
 // バター復活（誤削除対応・1回のみ）
 if(!store.get('restore_butter_v1',false)){
